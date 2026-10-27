@@ -169,7 +169,13 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
   const amtNum = Math.round(+amtShown * 1000), shipNum = Math.round((+ship || 0) * 1000);
 
   const setLine = (key: number, patch: Partial<FormLine>) =>
-    setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...patch } : l)));
+    changeLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...patch } : l)));
+
+  // Changing items or quantities drops any typed total so it's recalculated from the lines
+  function changeLines(fn: (ls: FormLine[]) => FormLine[]) {
+    setLines(fn);
+    setAmt("");
+  }
 
   function resetForm() {
     setEditId(null); setName(""); setCh(CH[0]); setPhone(""); setAd(EMPTY_ADDR); setDDate(""); setDTime(""); setLines([newLine(s)]); setAmt(""); setShip(""); clear();
@@ -206,6 +212,8 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
       update((d) => {
         const o = d.orders.find((x) => x.id === id);
         if (!o) return;
+        // A deposit already received follows the new total (30% of it)
+        if (o.dep && o.amt !== amtNum) o.dep = deposit(amtNum);
         Object.assign(o, { name: n, ch, ...contact, amt: amtNum, ship: shipNum });
         if (valid.length) {
           o.lines = valid;
@@ -278,11 +286,11 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
                 <option value="con">{t.piece}</option>
               </select>
               <button type="button" className="ghost x" aria-label={t.rm}
-                onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))}>×</button>
+                onClick={() => changeLines((ls) => ls.filter((x) => x.key !== l.key))}>×</button>
             </div>
           ))}
         </div>
-        <button type="button" className="ghost al" onClick={() => setLines((ls) => [...ls, newLine(s)])}>+ {t.addLine}</button>
+        <button type="button" className="ghost al" onClick={() => changeLines((ls) => [...ls, newLine(s)])}>+ {t.addLine}</button>
         <Money value={amtShown} onChange={setAmt} placeholder={t.total} bad={bad.a} />
         <Money value={ship} onChange={setShip} placeholder={t.ship} />
         <button className="btn" type="submit">{editing ? t.saveEdit : t.add}</button>

@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import Background from "./Background";
+// Static import so the logo URL picks up the GitHub Pages base path
+import logo from "@/public/logo.png";
 import Orders from "./Orders";
 import MenuView from "./MenuView";
 import CalendarView from "./CalendarView";
@@ -50,7 +52,7 @@ export default function Dashboard() {
       <div className="wrap">
         <div className="top">
           <div className="brand">
-            <Image className="logo" src="/logo.png" alt="Cua nhà Ếch" width={185} height={120} priority />
+            <Image className="logo" src={logo} alt="Cua nhà Ếch" priority />
             <div>
               <h1>Cua Nhà <b>Ếch</b></h1>
               <p className="sub">{t.sub}</p>
