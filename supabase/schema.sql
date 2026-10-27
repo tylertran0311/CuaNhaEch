@@ -95,5 +95,5 @@ end $$;
 
 -- ↓↓↓ Put your own email here (and one line per extra person), then run.
 insert into public.members (email) values
-  ('email-cua-ban@example.com')
+  ('cuanhaech@gmail.com')
 on conflict do nothing;
