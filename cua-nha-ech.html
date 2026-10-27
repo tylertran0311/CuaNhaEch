@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cua Nhà Ếch – Shop dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#fff3b8;--ink:#3b2f5c;--mut:#7a6a94;--pk:#ff6fae;--pk2:#ffc9e0;--lil:#d3c6ff;--aq:#8fe3d5;--sun:#ffd84a;--co:#ffa285;--wh:#fffef7;--red:#e5487f;--grn:#22a58f;--ln:#e6d7a0;--tint:#fff6d6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;color:var(--ink);font:16px/1.5 "Be Vietnam Pro",system-ui,sans-serif;background:linear-gradient(180deg,#fff4bd 0%,#ffeeaa 55%,#ffe0c6 100%) fixed;min-height:100vh;overflow-x:hidden}
+.fx{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.fx::before{content:"";position:absolute;inset:-20%;background:radial-gradient(circle at 12% 22%,rgba(255,130,190,.26),transparent 38%),radial-gradient(circle at 88% 12%,rgba(150,190,255,.3),transparent 34%),radial-gradient(circle at 78% 88%,rgba(190,160,255,.28),transparent 40%);animation:dr 16s ease-in-out infinite alternate}
+.fx::after{content:"";position:absolute;left:-10%;right:-10%;bottom:0;height:28vh;background:repeating-linear-gradient(90deg,rgba(160,110,230,.28) 0 2px,transparent 2px 48px),repeating-linear-gradient(0deg,rgba(160,110,230,.28) 0 2px,transparent 2px 36px);transform:perspective(320px) rotateX(58deg);transform-origin:bottom;-webkit-mask-image:linear-gradient(transparent,#000 75%);mask-image:linear-gradient(transparent,#000 75%)}
+.fx i{position:absolute;font-style:normal;color:var(--pk);animation:tw 3.2s ease-in-out infinite}
+.sun{position:absolute;right:-70px;top:90px;width:240px;height:240px;border-radius:50%;background:linear-gradient(#ffd84a,#ff6fae);opacity:.38;-webkit-mask-image:repeating-linear-gradient(180deg,#000 0 12px,transparent 12px 17px);mask-image:repeating-linear-gradient(180deg,#000 0 12px,transparent 12px 17px);animation:fl 7s ease-in-out infinite}
+@keyframes dr{to{transform:translate(4%,3%) scale(1.08)}}
+@keyframes tw{0%,100%{opacity:.15;transform:scale(.7) rotate(0)}50%{opacity:.9;transform:scale(1.15) rotate(20deg)}}
+@keyframes fl{50%{transform:translateY(-14px)}}
+@keyframes bob{50%{transform:translateY(-5px) rotate(-4deg)}}
+@keyframes mq{to{transform:translateX(-50%)}}
+@keyframes pop{0%{transform:scale(.55) rotate(-8deg);opacity:0}70%{transform:scale(1.07) rotate(2deg)}100%{transform:none;opacity:1}}
+@keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes rise{from{transform:scaleY(0)}}
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(255,111,174,.35)}}
+.tick{position:relative;z-index:2;overflow:hidden;border-bottom:2px solid var(--ink);background:linear-gradient(90deg,var(--pk2),var(--lil),var(--aq),var(--sun))}
+.tk{display:inline-block;white-space:nowrap;padding:4px 0;font:800 13px "Baloo 2",sans-serif;letter-spacing:.14em;animation:mq 26s linear infinite}
+.wrap{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:22px 20px 70px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}.brand .sub{margin-bottom:14px}
+.logo{height:68px;width:auto;animation:bob 3s ease-in-out infinite;filter:drop-shadow(2px 3px 0 rgba(59,47,92,.25))}
+h1{font:800 34px/1.1 "Baloo 2",system-ui,sans-serif;margin:0 0 2px;text-shadow:3px 3px 0 var(--pk2)}
+h1 b{color:var(--pk);-webkit-text-stroke:1.5px var(--ink);paint-order:stroke fill;text-shadow:none}
+.sub{color:var(--mut);margin:0 0 18px}
+.lang{display:flex;border:2px solid var(--ink);border-radius:999px;overflow:hidden;background:var(--wh);box-shadow:0 3px 0 var(--ink)}
+.lang button{border:0;background:none;padding:5px 14px;font:800 14px "Baloo 2",sans-serif;color:var(--mut);cursor:pointer;transition:background .15s}
+.lang button.on{background:var(--ink);color:var(--sun)}
+nav{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px}
+nav button{background:var(--wh);border:2px solid var(--ink);border-radius:999px;padding:6px 18px;font:800 15px "Baloo 2",sans-serif;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--ink);transition:transform .15s,background .15s,box-shadow .15s}
+nav button:hover{transform:translateY(-2px) rotate(-1.5deg)}
+nav button.on{background:var(--pk2);transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+nav button.on::before{content:"✦ "}
+#view.in{animation:up .4s ease}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--pk);outline-offset:2px}
+.panel,.stat,.add{background:var(--wh);border:2px solid var(--ink);border-radius:16px;box-shadow:4px 4px 0 var(--ink)}
+.add{display:flex;flex-wrap:wrap;gap:10px;padding:14px;margin-bottom:8px}
+.panel .add{box-shadow:none;background:none;border:0;padding:0}
+.panel{padding:14px;margin-bottom:20px}
+.panel h2{margin:-14px -14px 12px;padding:6px 14px;background:linear-gradient(90deg,var(--pk2),var(--lil));border-bottom:2px solid var(--ink);border-radius:14px 14px 0 0;font:800 17px "Baloo 2",sans-serif}
+.panel h2::before{content:"● ● ●";letter-spacing:2px;font-size:9px;margin-right:10px;vertical-align:2px}
+input,select{font:inherit;color:var(--ink);background:var(--wh);border:2px solid var(--ink);border-radius:12px;padding:10px 12px;min-width:0;flex:1 1 130px;transition:box-shadow .15s}
+input:focus,select:focus{box-shadow:0 0 0 4px var(--pk2)}
+.u{display:flex;align-items:center;flex:1 1 130px;background:var(--wh);border:2px solid var(--ink);border-radius:12px;padding-right:10px;min-width:0}
+.u:focus-within{box-shadow:0 0 0 4px var(--pk2)}
+.u input{border:0;flex:1 1 50px;background:none;box-shadow:none}.u span{color:var(--mut);font-size:13px;white-space:nowrap;font-weight:700}
+.bad,.u.bad{border-color:var(--red)!important;background:#ffeaf2;animation:shake .35s}
+.err{color:var(--red);font-weight:700;min-height:22px;margin-bottom:10px}
+@media(max-width:600px){.add>input,.add>select,.add>.btn{flex:1 1 100%}.add>.u{flex:1 1 calc(50% - 5px)}}
+.btn{background:linear-gradient(180deg,#ff9ccb,#ff5fa2);color:#fff;border:2px solid var(--ink);border-radius:999px;padding:7px 22px;font:800 16px "Baloo 2",sans-serif;cursor:pointer;text-shadow:0 1px 0 rgba(59,47,92,.55);box-shadow:0 4px 0 var(--ink),inset 0 2px 0 rgba(255,255,255,.65);transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 0 var(--ink),inset 0 2px 0 rgba(255,255,255,.65)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink),inset 0 2px 0 rgba(255,255,255,.65)}
+.ghost{background:var(--wh);border:2px solid var(--ink);color:var(--ink);border-radius:999px;padding:2px 12px;font:700 13px "Be Vietnam Pro",sans-serif;cursor:pointer;box-shadow:0 2px 0 var(--ink);transition:transform .12s,background .12s}
+.ghost:hover{background:var(--sun);transform:translateY(-1px)}
+.note{background:var(--sun);border:2px dashed var(--ink);border-radius:14px;padding:8px 14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:14px;font-weight:500}
+.note::before{content:"✦";animation:tw 2s infinite}
+.lines{flex:1 1 100%;display:flex;flex-direction:column;gap:8px}
+.ln{display:flex;gap:8px}.ln select.lp{flex:2 1 160px}.ln .lq{flex:1 1 80px}.ln select.lu{flex:0 0 78px}.ln .x{flex:0 0 auto}
+.al{flex:0 0 auto}
+.sg{color:var(--mut);font-size:13px;min-height:18px;margin:0 2px 4px}
+.board{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
+@media(max-width:1199px){.board{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:699px){.board{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.sun{display:none}h1{font-size:28px}.logo{height:56px}}
+@media(max-width:479px){.board{grid-template-columns:1fr}}
+.col{background:rgba(255,254,247,.55);border:2px solid var(--ink);border-radius:18px;padding:10px;min-height:200px;box-shadow:3px 3px 0 var(--ink);transition:background .2s}
+.col h3{margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;gap:6px;font:800 14px/1.2 "Baloo 2",sans-serif;padding:3px 6px 3px 10px;border:2px solid var(--ink);border-radius:999px}
+.col h3 b{font-weight:800}
+.col:nth-child(1) h3{background:var(--sun)}.col:nth-child(2) h3{background:var(--pk2)}.col:nth-child(3) h3{background:var(--lil)}.col:nth-child(4) h3{background:var(--aq)}.col:nth-child(5) h3{background:#ffd0bd}.col:nth-child(6) h3{background:#c5efb0}
+.col h3 .n{background:var(--wh);border:2px solid var(--ink);border-radius:999px;min-width:24px;text-align:center;font-size:12px;padding:0 6px}
+.col.over{background:#ffe3f0;outline:3px dashed var(--pk);outline-offset:-3px;animation:pulse 1s infinite}
+.card{background:var(--wh);border:2px solid var(--ink);border-radius:14px;padding:12px;margin-bottom:12px;font-size:14px;box-shadow:3px 3px 0 var(--ink);cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none;position:relative;transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translate(-1px,-2px) rotate(-.7deg);box-shadow:5px 6px 0 var(--ink)}
+.card.pop{animation:pop .5s cubic-bezier(.3,1.5,.5,1)}
+.grip{float:right;touch-action:none;cursor:grab;padding:0 4px 6px 10px;color:var(--mut);font-size:16px;line-height:1}
+.card b{font:800 16px "Baloo 2",sans-serif}.card .m{color:var(--mut)}
+.card .row{display:flex;justify-content:flex-end;margin-top:8px}
+.ch{display:inline-block;font-size:11px;font-weight:700;background:#ebe3ff;border:1.5px solid var(--ink);border-radius:999px;padding:0 8px}
+.tg{display:inline-block;font-size:11px;font-weight:800;border:1.5px solid var(--ink);border-radius:999px;padding:0 8px;color:var(--ink)}.tg.crab{background:var(--co)}.tg.shrimp{background:var(--aq)}
+.ghostc{position:fixed;z-index:50;pointer-events:none;box-shadow:8px 10px 0 rgba(59,47,92,.3);transform:rotate(4deg) scale(1.05);margin:0}
+.empty{color:var(--mut);padding:10px 0}.empty::before{content:"✧ "}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:20px}
+.stat{padding:12px 14px;transition:transform .2s}.stat:hover{transform:translateY(-3px) rotate(-1deg)}
+.stat:nth-child(1){background:#dff8f2}.stat:nth-child(2){background:#ffe1ef}.stat:nth-child(3){background:#ebe3ff}.stat:nth-child(4){background:#fff0b0}
+.stat small{color:var(--mut);font-weight:700}.stat div{font:800 26px/1.2 "Baloo 2",sans-serif}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.two{grid-template-columns:1fr}}
+.bars{display:flex;align-items:flex-end;gap:14px;height:150px;border-bottom:2px solid var(--ink);padding:0 4px}
+.g{flex:1;text-align:center;font-size:12px;color:var(--mut);font-weight:700}
+.g .p{display:flex;align-items:flex-end;justify-content:center;gap:4px;height:130px}
+.g i{display:block;width:40%;max-width:28px;border:2px solid var(--ink);border-bottom:0;border-radius:7px 7px 0 0;min-height:4px;transform-origin:bottom;animation:rise .8s cubic-bezier(.3,1.4,.5,1) both}
+.legend{font-size:12px;color:var(--mut);margin-top:8px}.legend u{display:inline-block;width:11px;height:11px;border:1.5px solid var(--ink);border-radius:3px;margin:0 4px 0 10px;text-decoration:none}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:7px 4px;border-bottom:2px dashed var(--ln)}th{color:var(--mut);font-weight:700;font-size:13px}
+td.r,th.r{text-align:right}
+.hb{height:14px;background:var(--wh);border:2px solid var(--ink);border-radius:999px;overflow:hidden;margin:4px 0 12px}.hb i{display:block;height:100%;background:linear-gradient(90deg,var(--aq),var(--lil),var(--pk2));transform-origin:left;animation:grow .9s cubic-bezier(.3,1.2,.5,1) both}
+.mh{font:800 15px "Baloo 2",sans-serif;margin:14px 0 4px}
+.mp{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:2px dashed var(--ln);flex-wrap:wrap}
+.mn{flex:1 1 150px;display:flex;flex-direction:column}.mn .m{color:var(--mut);font-size:13px}.mu{flex:0 0 200px}
+.rules{margin:0;padding-left:20px}.rules li{margin:4px 0}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="fx" aria-hidden="true"><div class="sun"></div><i style="left:6%;top:16%;font-size:22px">✦</i><i style="left:30%;top:8%;font-size:16px;animation-delay:-1s">♡</i><i style="left:60%;top:20%;font-size:20px;animation-delay:-2s;color:#9a84ff">✧</i><i style="left:92%;top:40%;font-size:18px;animation-delay:-.5s">★</i><i style="left:4%;top:55%;font-size:18px;animation-delay:-1.5s;color:#3fc7b3">✧</i><i style="left:48%;top:62%;font-size:24px;animation-delay:-2.4s">✦</i><i style="left:80%;top:75%;font-size:16px;animation-delay:-.8s;color:#ffb300">★</i><i style="left:20%;top:84%;font-size:20px;animation-delay:-1.9s;color:#9a84ff">♡</i></div><div class="tick" aria-hidden="true"><div class="tk"><span>✦ CUA NHÀ ẾCH ✦ CUA CÀ MAU CHÍNH GỐC ✦ CUA · TÔM ✦ ✦ CUA NHÀ ẾCH ✦ CUA CÀ MAU CHÍNH GỐC ✦ CUA · TÔM ✦ ✦ CUA NHÀ ẾCH ✦ CUA CÀ MAU CHÍNH GỐC ✦ CUA · TÔM ✦ </span><span>✦ CUA NHÀ ẾCH ✦ CUA CÀ MAU CHÍNH GỐC ✦ CUA · TÔM ✦ ✦ CUA NHÀ ẾCH ✦ CUA CÀ MAU CHÍNH GỐC ✦ CUA · TÔM ✦ ✦ CUA NHÀ ẾCH ✦ CUA CÀ MAU CHÍNH GỐC ✦ CUA · TÔM ✦ </span></div></div>
+<div class="wrap">
+  <div class="top"><div class="brand"><img class="logo" alt="Cua nhà Ếch" src="data:image/png;base64,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"><div><h1>Cua Nhà <b>Ếch</b></h1><p class="sub" id="sub"></p></div></div><div class="lang" id="lang"></div></div>
+  <nav id="tabs"></nav>
+  <div id="view"></div>
+</div>
+<script>
+var popId=null,IC=['⏳','✅','🧾','💖','🍳','🚚'],KEY='cne-dashboard-v1',LK='cne-lang',PAID=3,CH=['Facebook','Zalo','TikTok'],tab='orders',S=null,L='vi',arm=false;
+var T={
+vi:{kCrab:'Cua',kShrimp:'Tôm',piece:'con',qty:'Số lượng',addLine:'Thêm món',sugg:'Gợi ý theo giá menu (sửa được): ',suggEst:' · tính theo "con" là ước lượng theo cân nặng trung bình',stale:'Giá cua đổi theo ngày. Menu cập nhật lần cuối: {d}.',openMenu:'Mở menu',priceOk:'Giá vẫn đúng hôm nay',menuT:'Menu và giá hôm nay',menuHint:'Sửa giá khi giá thay đổi. Đơn cũ giữ nguyên giá lúc đặt.',updAt:'Cập nhật giá: ',notYet:'Chưa xác nhận giá hôm nay',addItem:'Thêm món vào menu',itemName:'Tên món (vd: Cua Gạch)',itemSize:'Size (vd: 2-3 con/kg)',price:'Giá/kg',addItemB:'Thêm món',rulesT:'Cách đặt hàng',rules:['Nhận đặt trước 2 ngày (chốt order).','Khách cọc trước 30% tổng tiền hàng để lên đơn.','Hủy trước 2 ngày: shop hoàn 100% tiền cọc.','Đơn hấp: miễn phí từ 2kg (dưới 2kg phụ thu 10k).','Tôm: hàng thường có sẵn; tôm thiên nhiên có theo đợt, 1 tháng 2 lần.'],sub:'Theo dõi đơn cua, tôm, thu chi và khách hàng ở một chỗ.',tabs:['Đơn hàng','Menu','Thu chi','Khách hàng'],
+st:['Đang chờ xác nhận','Đã xác nhận','Đã báo phí ship','Đã thanh toán','Đang làm hàng','Đã gửi'],
+name:'Tên khách',crab:'Đơn cua (vd: 2kg)',shrimp:'Đơn tôm (vd: 1kg)',total:'Tổng tiền',ship:'Phí ship',add:'Thêm đơn',none:'Chưa có đơn',rm:'Xóa',shipw:'ship',
+hint:'Kéo thẻ sang cột khác để chuyển bước (trên điện thoại, kéo bằng tay cầm ⠿). Tiền được tính là đã nhận khi đơn sang cột Đã thanh toán. Dữ liệu lưu trên trình duyệt này.',
+clr:'Xóa dữ liệu mẫu',sure:'Bấm lần nữa để xóa hết',miss:'Bạn chưa nhập: ',itemMiss:'món (cua hoặc tôm) kèm số lượng',
+mIn:'Tiền vào',mOut:'Tiền ra',profit:'Lợi nhuận',wait:'Chờ thanh toán',l6:'6 tháng gần nhất',lgIn:'Tiền vào',lgOut:'Tiền ra',lgNote:' · số dưới mỗi tháng là lợi nhuận',
+addExp:'Thêm khoản chi',what:'Chi cho (cua, ship, đá…)',amt:'Số tiền',addExpB:'Thêm khoản chi',exps:'Các khoản chi',date:'Ngày',forc:'Chi cho',noExp:'Chưa có khoản chi. Thêm tiền mua cua, hộp xốp, ship…',
+cust:'Khách hàng',rep:'Khách quay lại',avg:'Đơn trung bình',byCh:'Đơn theo kênh',ords:'đơn',seeCh:'Thêm đơn để xem kênh nào hiệu quả.',best:'Khách mua nhiều nhất',nm:'Tên',oc:'Số đơn',sp:'Đã chi',noC:'Chưa có khách.',again:'Đến lúc nhắn lại',lastO:'Đơn gần nhất',every:'Ai cũng mới đặt trong 3 tuần qua.'},
+en:{kCrab:'Crab',kShrimp:'Shrimp',piece:'pcs',qty:'Quantity',addLine:'Add item',sugg:'Suggested from menu prices (editable): ',suggEst:' · “pcs” is estimated from average weight',stale:'Crab prices change daily. Menu last updated: {d}.',openMenu:'Open menu',priceOk:'Prices are still correct today',menuT:'Menu and today’s prices',menuHint:'Edit a price when it changes. Past orders keep the price they were placed at.',updAt:'Prices updated: ',notYet:'Not confirmed today',addItem:'Add item to menu',itemName:'Item name (e.g. Roe crab)',itemSize:'Size (e.g. 2-3 per kg)',price:'Price/kg',addItemB:'Add item',rulesT:'How to order',rules:['Pre-order 2 days ahead.','30% deposit of the order total to confirm.','Cancel 2 days ahead: 100% deposit refunded.','Steamed orders: free from 2 kg (under 2 kg: +10k).','Shrimp: regular stock is usually available; natural shrimp comes in batches, twice a month.'],sub:'Track crab and shrimp orders, money and customers in one place.',tabs:['Orders','Menu','Money','Customers'],
+st:['Awaiting confirmation','Confirmed','Fee checked','Paid','Making','Shipped'],
+name:'Customer name',crab:'Crab order (e.g. 2 kg)',shrimp:'Shrimp order (e.g. 1 kg)',total:'Total',ship:'Shipping fee',add:'Add order',none:'No orders',rm:'Remove',shipw:'ship',
+hint:'Drag a card into another column to move it (on phone, drag from the ⠿ handle). Money counts as received once an order reaches Paid. Data is saved in this browser.',
+clr:'Clear sample data',sure:'Click again to clear all',miss:'Please fill in: ',itemMiss:'an item (crab or shrimp) with quantity',
+mIn:'Money in',mOut:'Money out',profit:'Profit',wait:'Waiting for payment',l6:'Last 6 months',lgIn:'Money in',lgOut:'Money out',lgNote:' · figure under each month is profit',
+addExp:'Add an expense',what:'What for (crab, shipping, ice…)',amt:'Amount',addExpB:'Add expense',exps:'Expenses',date:'Date',forc:'For',noExp:'No expenses yet. Add what you pay for crab, boxes and shipping.',
+cust:'Customers',rep:'Repeat customers',avg:'Average order',byCh:'Orders by channel',ords:'orders',seeCh:'Add orders to see which channel works best.',best:'Best customers',nm:'Name',oc:'Orders',sp:'Spent',noC:'No customers yet.',again:'Time to message again',lastO:'Last order',every:'Everyone ordered in the last 3 weeks.'}};
+function t(k){return T[L][k]}
+function p2(n){return('0'+n).slice(-2)}
+function day(n){var d=new Date();d.setDate(d.getDate()-n);return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())}
+function fd(d){return d.slice(8)+'/'+d.slice(5,7)}
+function defMenu(){return{upd:'',items:[
+{id:'c1',k:'crab',name:'Thịt Tứ',price:360000,w:225,sz:'4-5 con/kg'},
+{id:'c2',k:'crab',name:'Yếm Vuông',price:370000,w:215,sz:'5-6 con/kg'},
+{id:'c3',k:'crab',name:'Thịt Y',price:450000,w:375,sz:'2-3 con/kg'},
+{id:'c4',k:'crab',name:'Gạch',price:650000,w:350,sz:'2-3 con/kg'},
+{id:'s1',k:'shrimp',name:'Bạc',price:90000,w:10,sz:'>100 con/kg'},
+{id:'s2',k:'shrimp',name:'Thẻ mix sú',price:185000,w:22,sz:'40-50 con/kg'},
+{id:'s3',k:'shrimp',name:'Sú 20 con',price:320000,w:50,sz:'19-21 con/kg'}]}}
+function sample(){return{orders:[
+{id:1,name:'Chị Lan',ch:'Facebook',crab:'2kg',shrimp:'',amt:980000,ship:40000,stage:5,date:day(40)},
+{id:2,name:'Anh Minh',ch:'Zalo',crab:'3kg',shrimp:'1kg',amt:1750000,ship:55000,stage:5,date:day(22)},
+{id:3,name:'Chị Lan',ch:'TikTok',crab:'1kg',shrimp:'',amt:520000,ship:30000,stage:4,date:day(6)},
+{id:4,name:'Cô Hạnh',ch:'Zalo',crab:'5kg',shrimp:'',amt:2300000,ship:90000,stage:2,date:day(2)},
+{id:5,name:'Anh Tuấn',ch:'Facebook',crab:'',shrimp:'2kg',amt:690000,ship:45000,stage:0,date:day(0)}],
+exp:[{id:1,label:'Crab from farm',amt:1100000,date:day(40)},{id:2,label:'Crab from farm',amt:1200000,date:day(22)},{id:3,label:'Foam boxes and ice',amt:180000,date:day(8)}],next:10,v:2}}
+function load(){try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}if(!S||!S.orders)S=sample();if(!S.menu)S.menu=defMenu();if(!S.v){S.orders.forEach(function(o){o.stage=[1,2,2,3,4,5][o.stage]||0});S.v=2}try{L=localStorage.getItem(LK)||'vi'}catch(e){L='vi'}if(!T[L])L='vi'}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function vnd(n){return Math.round(n).toLocaleString('vi-VN')+' ₫'}
+function short(n){return n>=1e6?(n/1e6).toFixed(1)+'M':Math.round(n/1e3)+'k'}
+function setTab(k){tab=k;render();var v=$('view');v.classList.remove('in');void v.offsetWidth;v.classList.add('in')}
+function setLang(l){L=l;try{localStorage.setItem(LK,l)}catch(e){}document.documentElement.lang=l;render()}
+function money(id,ph){return '<label class="u"><input id="'+id+'" type="number" min="0" step="any" inputmode="decimal" placeholder="'+ph+'"><span>.000 ₫</span></label>'}
+function render(){
+  $('sub').textContent=t('sub');
+  $('lang').innerHTML=['vi','en'].map(function(l){return '<button class="'+(l==L?'on':'')+'" onclick="setLang(\''+l+'\')">'+l.toUpperCase()+'</button>'}).join('');
+  var K=['orders','menu','money','cust'];
+  $('tabs').innerHTML=K.map(function(k,i){return '<button class="'+(k==tab?'on':'')+'" onclick="setTab(\''+k+'\')">'+t('tabs')[i]+'</button>'}).join('');
+  $('view').innerHTML=tab=='orders'?vOrders():tab=='menu'?vMenu():tab=='money'?vMoney():vCust();
+}
+function flag(id,bad){var e=$(id);if(e)(e.parentNode.classList.contains('u')?e.parentNode:e).classList.toggle('bad',bad)}
+/* Orders */
+function kl(k){return t(k=='crab'?'kCrab':'kShrimp')}
+function item(id){return S.menu.items.filter(function(i){return i.id==id})[0]}
+function prodOpts(){return ['crab','shrimp'].map(function(k){return '<optgroup label="'+kl(k)+'">'+S.menu.items.filter(function(i){return i.k==k}).map(function(i){return '<option value="'+i.id+'">'+esc(i.name)+' — '+short(i.price)+'/kg</option>'}).join('')+'</optgroup>'}).join('')}
+function lineRow(){return '<div class="ln"><select class="lp">'+prodOpts()+'</select><input class="lq" type="number" min="0" step="any" inputmode="decimal" placeholder="'+t('qty')+'"><select class="lu"><option value="kg">kg</option><option value="con">'+t('piece')+'</option></select><button class="ghost x" onclick="this.parentNode.remove();sugg()" aria-label="'+t('rm')+'">×</button></div>'}
+function addLine(){$('lines').insertAdjacentHTML('beforeend',lineRow())}
+function sugg(){
+  var a=$('a'),sg=$('sg');if(!a)return;
+  var tot=0,any=false,est=false;
+  document.querySelectorAll('.ln').forEach(function(r){var it=item(r.querySelector('.lp').value),q=+r.querySelector('.lq').value,u=r.querySelector('.lu').value;if(it&&q>0){any=true;if(u!='kg')est=true;tot+=it.price*q*(u=='kg'?1:it.w/1000)}});
+  if(!any){sg.textContent='';if(!a.dataset.man)a.value='';return}
+  var th=Math.round(tot/1000);if(!a.dataset.man)a.value=th;
+  sg.textContent=t('sugg')+vnd(th*1000)+(est?t('suggEst'):'');
+}
+function itemsHtml(o){
+  var h='';
+  if(o.lines&&o.lines.length)o.lines.forEach(function(l){h+='<div><span class="tg '+l.k+'">'+kl(l.k)+'</span> '+esc(l.name)+' · '+l.q+' '+(l.u=='kg'?'kg':t('piece'))+'</div>'});
+  else{if(o.crab)h+='<div><span class="tg crab">'+kl('crab')+'</span> '+esc(o.crab)+'</div>';if(o.shrimp)h+='<div><span class="tg shrimp">'+kl('shrimp')+'</span> '+esc(o.shrimp)+'</div>';if(o.item&&!o.crab&&!o.shrimp)h+='<div>'+esc(o.item)+'</div>'}
+  return h}
+function priceOk(){S.menu.upd=day(0);save();render()}
+function vOrders(){
+  var h='';
+  if(S.menu.upd!==day(0))h+='<div class="note"><span>'+t('stale').replace('{d}',S.menu.upd?fd(S.menu.upd):'—')+'</span><button class="ghost" onclick="setTab(\'menu\')">'+t('openMenu')+'</button><button class="ghost" onclick="priceOk()">'+t('priceOk')+'</button></div>';
+  h+='<div class="add"><input id="n" placeholder="'+t('name')+'"><select id="c">'+CH.map(function(c){return '<option>'+c+'</option>'}).join('')+'</select><div id="lines" class="lines">'+lineRow()+'</div><button class="ghost al" onclick="addLine()">+ '+t('addLine')+'</button>'+money('a',t('total'))+money('s',t('ship'))+'<button class="btn" onclick="addOrder()">'+t('add')+'</button></div><div id="sg" class="sg"></div><div id="err" class="err" role="alert"></div><div class="board">';
+  t('st').forEach(function(st,k){
+    var list=S.orders.filter(function(o){return o.stage==k});
+    h+='<div class="col" data-stage="'+k+'"><h3><b>'+IC[k]+' '+st+'</b><span class="n">'+list.length+'</span></h3>';
+    list.forEach(function(o){
+      h+='<div class="card'+(o.id==popId?' pop':'')+'" data-id="'+o.id+'"><span class="grip" aria-hidden="true">⠿</span><b>'+esc(o.name)+'</b> <span class="ch">'+esc(o.ch)+'</span>'+itemsHtml(o)+'<div class="m">'+vnd(o.amt)+' + '+t('shipw')+' '+vnd(o.ship)+'</div><div class="row"><button class="ghost" onclick="delOrder('+o.id+')">'+t('rm')+'</button></div></div>';
+    });
+    if(!list.length)h+='<div class="empty">'+t('none')+'</div>';
+    h+='</div>';
+  });
+  popId=null;return h+'</div><p class="sub" style="margin-top:12px">'+t('hint')+'</p><button class="ghost" onclick="resetAll(this)">'+t('clr')+'</button>';
+}
+function addOrder(){
+  var n=$('n').value.trim(),a=+$('a').value,s=+$('s').value||0,m=[],ls=[];
+  document.querySelectorAll('.ln').forEach(function(r){var it=item(r.querySelector('.lp').value),q=+r.querySelector('.lq').value;if(it&&q>0)ls.push({k:it.k,name:it.name,q:q,u:r.querySelector('.lu').value,price:it.price})});
+  document.querySelectorAll('.lq').forEach(function(x){x.classList.toggle('bad',!ls.length)});
+  flag('n',!n);flag('a',!(a>0));
+  if(!n)m.push(t('name'));if(!ls.length)m.push(t('itemMiss'));if(!(a>0))m.push(t('total'));
+  if(m.length){$('err').textContent=t('miss')+m.join(', ');return}
+  popId=S.next;S.orders.push({id:S.next++,name:n,ch:$('c').value,lines:ls,amt:Math.round(a*1000),ship:Math.round(s*1000),stage:0,date:day(0)});
+  save();render();
+}
+function delOrder(id){S.orders=S.orders.filter(function(o){return o.id!=id});save();render()}
+function resetAll(b){
+  if(!arm){arm=true;b.textContent=t('sure');setTimeout(function(){arm=false;if(b.isConnected)b.textContent=t('clr')},3000);return}
+  arm=false;S={orders:[],exp:[],next:1,menu:S.menu,v:2};save();render();
+}
+/* Menu */
+function vMenu(){
+  var h='<div class="panel"><h2>'+t('menuT')+'</h2><p class="sub" style="margin:0 0 6px">'+t('menuHint')+'</p><p style="margin:0 0 6px"><b id="upd">'+(S.menu.upd?t('updAt')+fd(S.menu.upd):t('notYet'))+'</b></p>';
+  ['crab','shrimp'].forEach(function(k){
+    h+='<h3 class="mh">'+(k=='crab'?'🦀':'🦐')+' '+kl(k)+'</h3>';
+    S.menu.items.filter(function(i){return i.k==k}).forEach(function(i){
+      h+='<div class="mp" data-id="'+i.id+'"><div class="mn"><b>'+esc(i.name)+'</b><span class="m">'+esc(i.sz||'')+'</span></div><label class="u mu"><input class="mpi" type="number" min="0" step="any" inputmode="decimal" value="'+(i.price/1000)+'"><span>.000 ₫/kg</span></label><button class="ghost" onclick="delItem(\''+i.id+'\')">'+t('rm')+'</button></div>';
+    });
+  });
+  h+='</div><div class="panel"><h2>'+t('addItem')+'</h2><div class="add" style="border:0;padding:0;margin:0"><select id="mk"><option value="crab">'+kl('crab')+'</option><option value="shrimp">'+kl('shrimp')+'</option></select><input id="mnm" placeholder="'+t('itemName')+'"><input id="msz" placeholder="'+t('itemSize')+'">'+money('mpr',t('price'))+'<button class="btn" onclick="addItem()">'+t('addItemB')+'</button></div><div id="err" class="err" role="alert" style="margin:8px 0 0"></div></div>';
+  h+='<div class="panel"><h2>'+t('rulesT')+'</h2><ul class="rules">'+t('rules').map(function(r){return '<li>'+r+'</li>'}).join('')+'</ul></div>';
+  return h;
+}
+function setPrice(id,v){var it=item(id);if(!it||!(+v>0))return;it.price=Math.round(v*1000);S.menu.upd=day(0);save();var u=$('upd');if(u)u.textContent=t('updAt')+fd(S.menu.upd)}
+function delItem(id){S.menu.items=S.menu.items.filter(function(i){return i.id!=id});save();render()}
+function addItem(){
+  var nm=$('mnm').value.trim(),pr=+$('mpr').value,m=[];
+  flag('mnm',!nm);flag('mpr',!(pr>0));
+  if(!nm)m.push(t('itemName').split(' (')[0]);if(!(pr>0))m.push(t('price'));
+  if(m.length){$('err').textContent=t('miss')+m.join(', ');return}
+  var k=$('mk').value;S.menu.items.push({id:'u'+S.next++,k:k,name:nm,price:Math.round(pr*1000),w:k=='crab'?250:30,sz:$('msz').value.trim()});
+  S.menu.upd=day(0);save();render();
+}
+/* Money */
+function months(){var a=[],d=new Date();for(var i=5;i>=0;i--){var x=new Date(d.getFullYear(),d.getMonth()-i,1);a.push(x.getFullYear()+'-'+p2(x.getMonth()+1))}return a}
+function vMoney(){
+  var paid=S.orders.filter(function(o){return o.stage>=PAID}),pend=S.orders.filter(function(o){return o.stage<PAID});
+  var inn=paid.reduce(function(s,o){return s+o.amt},0),out=S.exp.reduce(function(s,e){return s+e.amt},0),pn=pend.reduce(function(s,o){return s+o.amt},0);
+  var ms=months(),mi=ms.map(function(m){return paid.filter(function(o){return o.date.slice(0,7)==m}).reduce(function(s,o){return s+o.amt},0)}),mo=ms.map(function(m){return S.exp.filter(function(e){return e.date.slice(0,7)==m}).reduce(function(s,e){return s+e.amt},0)});
+  var mx=Math.max.apply(null,mi.concat(mo).concat([1]));
+  var h='<div class="stats"><div class="stat"><small>'+t('mIn')+'</small><div style="color:var(--grn)">'+vnd(inn)+'</div></div><div class="stat"><small>'+t('mOut')+'</small><div style="color:var(--red)">'+vnd(out)+'</div></div><div class="stat"><small>'+t('profit')+'</small><div>'+vnd(inn-out)+'</div></div><div class="stat"><small>'+t('wait')+'</small><div>'+vnd(pn)+'</div></div></div>';
+  h+='<div class="panel"><h2>'+t('l6')+'</h2><div class="bars">'+ms.map(function(m,k){return '<div class="g"><div class="p"><i style="height:'+mi[k]/mx*100+'%;background:var(--grn)" title="'+vnd(mi[k])+'"></i><i style="height:'+mo[k]/mx*100+'%;background:var(--red)" title="'+vnd(mo[k])+'"></i></div>'+m.slice(5)+'/'+m.slice(2,4)+'<br>'+short(mi[k]-mo[k])+'</div>'}).join('')+'</div><div class="legend"><u style="background:var(--grn)"></u>'+t('lgIn')+'<u style="background:var(--red)"></u>'+t('lgOut')+t('lgNote')+'</div></div>';
+  h+='<div class="panel"><h2>'+t('addExp')+'</h2><div class="add" style="border:0;padding:0;margin:0"><input id="el" placeholder="'+t('what')+'">'+money('ea',t('amt'))+'<button class="btn" onclick="addExp()">'+t('addExpB')+'</button></div><div id="err" class="err" role="alert" style="margin:8px 0 0"></div></div>';
+  h+='<div class="panel"><h2>'+t('exps')+'</h2>'+(S.exp.length?'<table><tr><th>'+t('date')+'</th><th>'+t('forc')+'</th><th class="r">'+t('amt')+'</th><th></th></tr>'+S.exp.slice().sort(function(a,b){return a.date<b.date?1:-1}).map(function(e){return '<tr><td>'+e.date+'</td><td>'+esc(e.label)+'</td><td class="r">'+vnd(e.amt)+'</td><td class="r"><button class="ghost" onclick="delExp('+e.id+')">'+t('rm')+'</button></td></tr>'}).join('')+'</table>':'<div class="empty">'+t('noExp')+'</div>')+'</div>';
+  return h;
+}
+function addExp(){
+  var l=$('el').value.trim(),a=+$('ea').value,m=[];
+  flag('el',!l);flag('ea',!(a>0));
+  if(!l)m.push(t('what').split(' (')[0]);if(!(a>0))m.push(t('amt'));
+  if(m.length){$('err').textContent=t('miss')+m.join(', ');return}
+  S.exp.push({id:S.next++,label:l,amt:Math.round(a*1000),date:day(0)});save();render();
+}
+function delExp(id){S.exp=S.exp.filter(function(e){return e.id!=id});save();render()}
+/* Customers */
+function vCust(){
+  var m={};
+  S.orders.forEach(function(o){var k=o.name.toLowerCase(),c=m[k]||(m[k]={name:o.name,n:0,sum:0,last:''});c.n++;c.sum+=o.amt;if(o.date>c.last)c.last=o.date});
+  var A=Object.keys(m).map(function(k){return m[k]}).sort(function(a,b){return b.sum-a.sum});
+  var rep=A.filter(function(c){return c.n>1}).length,tot=S.orders.reduce(function(s,o){return s+o.amt},0);
+  var ch={};S.orders.forEach(function(o){ch[o.ch]=(ch[o.ch]||0)+1});
+  var h='<div class="stats"><div class="stat"><small>'+t('cust')+'</small><div>'+A.length+'</div></div><div class="stat"><small>'+t('rep')+'</small><div>'+rep+'</div></div><div class="stat"><small>'+t('avg')+'</small><div>'+vnd(S.orders.length?tot/S.orders.length:0)+'</div></div></div><div class="two"><div class="panel"><h2>'+t('byCh')+'</h2>';
+  Object.keys(ch).forEach(function(k){var q=ch[k]/S.orders.length*100;h+='<div>'+esc(k)+' · '+ch[k]+' '+t('ords')+' ('+Math.round(q)+'%)</div><div class="hb"><i style="width:'+q+'%"></i></div>'});
+  if(!S.orders.length)h+='<div class="empty">'+t('seeCh')+'</div>';
+  h+='</div><div class="panel"><h2>'+t('best')+'</h2>'+(A.length?'<table><tr><th>'+t('nm')+'</th><th class="r">'+t('oc')+'</th><th class="r">'+t('sp')+'</th></tr>'+A.slice(0,8).map(function(c){return '<tr><td>'+esc(c.name)+'</td><td class="r">'+c.n+'</td><td class="r">'+vnd(c.sum)+'</td></tr>'}).join('')+'</table>':'<div class="empty">'+t('noC')+'</div>')+'</div></div>';
+  var due=A.filter(function(c){return (new Date(day(0))-new Date(c.last))/864e5>=21}).slice(0,6);
+  h+='<div class="panel"><h2>'+t('again')+'</h2>'+(due.length?'<table><tr><th>'+t('nm')+'</th><th>'+t('lastO')+'</th><th class="r">'+t('oc')+'</th></tr>'+due.map(function(c){return '<tr><td>'+esc(c.name)+'</td><td>'+c.last+'</td><td class="r">'+c.n+'</td></tr>'}).join('')+'</table>':'<div class="empty">'+t('every')+'</div>')+'</div>';
+  return h;
+}
+/* Drag and drop */
+var drag=null;
+function colAt(x,y){var e=document.elementFromPoint(x,y);return e?e.closest('.col'):null}
+document.addEventListener('pointerdown',function(e){var c=e.target.closest('.card');if(!c||e.target.closest('button'))return;if(e.pointerType==='touch'&&!e.target.closest('.grip'))return;drag={id:+c.dataset.id,el:c,x:e.clientX,y:e.clientY,on:false,g:null}});
+document.addEventListener('pointermove',function(e){
+  if(!drag)return;
+  if(!drag.on){if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)<6)return;drag.on=true;var g=drag.el.cloneNode(true);g.className='card ghostc';g.style.width=drag.el.offsetWidth+'px';document.body.appendChild(g);drag.g=g;drag.el.style.opacity='.35'}
+  drag.g.style.left=(e.clientX-drag.g.offsetWidth/2)+'px';drag.g.style.top=(e.clientY-24)+'px';
+  if(e.clientY<90)window.scrollBy(0,-14);else if(e.clientY>innerHeight-90)window.scrollBy(0,14);
+  document.querySelectorAll('.col.over').forEach(function(c){c.classList.remove('over')});
+  var col=colAt(e.clientX,e.clientY);if(col)col.classList.add('over');
+});
+function endDrag(e,drop){
+  if(!drag)return;var d=drag;drag=null;if(!d.on)return;
+  d.g.remove();document.querySelectorAll('.col.over').forEach(function(c){c.classList.remove('over')});
+  var col=drop?colAt(e.clientX,e.clientY):null;
+  if(col){S.orders.forEach(function(o){if(o.id==d.id)o.stage=+col.dataset.stage});save();popId=d.id}
+  render();
+}
+document.addEventListener('pointerup',function(e){endDrag(e,true)});
+document.addEventListener('pointercancel',function(e){endDrag(e,false)});
+document.addEventListener('keydown',function(e){if(e.key!=='Enter'||e.target.tagName!=='INPUT')return;var f=e.target.closest('.add');if(f){var b=f.querySelector('.btn');if(b)b.click()}});
+document.addEventListener('input',function(e){var x=e.target;if(x.id=='a')x.dataset.man=x.value===''?'':'1';if(x.closest('.ln'))sugg()});
+document.addEventListener('change',function(e){var x=e.target;if(x.closest('.ln'))sugg();var r=x.closest('.mp');if(r&&x.classList.contains('mpi'))setPrice(r.dataset.id,x.value)});
+load();document.documentElement.lang=L;render();
+</script>
+</body>
+</html>
