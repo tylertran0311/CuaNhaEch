@@ -5,7 +5,7 @@ import { Money, useErrors, type ViewProps } from "./ui";
 import type { Dict } from "@/lib/i18n";
 import { formatVN, isVNPhone } from "@/lib/phone";
 import { EMPTY_ADDR, PROVINCES, composeAddr, type Address } from "@/lib/address";
-import { CH, DEPOSITED, IC, KINDS, PAID, SHIPPED, byWhen, day, deposit, dueAfterDeposit, moveTo, stillDue, fd, fdw, kl, short, vnd, type Kind, type Line, type Order, type State, type Unit } from "@/lib/store";
+import { CH, DEPOSITED, IC, KINDS, PAID, SHIPPED, byWhen, day, deposit, dueAfterDeposit, moveTo, newId, stillDue, fd, fdw, kl, short, vnd, type Kind, type Line, type Order, type State, type Unit } from "@/lib/store";
 
 // When editing, a line starts on its saved snapshot (pid === OLD) so the order keeps the price it was placed at
 interface FormLine { key: number; pid: string; q: string; u: Unit; snap?: { k: Kind; name: string; price: number } }
@@ -143,12 +143,15 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
   useBoardDrag(move);
 
   const item = (id: string) => s.menu.items.find((i) => i.id === id);
+  // A line whose item was removed from the menu (here or on another device) falls back to the first item
+  const firstId = KINDS.flatMap((k) => s.menu.items.filter((i) => i.k === k))[0]?.id ?? "";
+  const pidOf = (l: FormLine) => (l.pid === OLD && l.snap ? OLD : item(l.pid) ? l.pid : firstId);
   const resolve = (l: FormLine) => {
-    if (l.pid === OLD && l.snap) {
+    if (pidOf(l) === OLD) {
       const m = s.menu.items.find((i) => i.k === l.snap!.k && i.name === l.snap!.name);
-      return { ...l.snap, w: m ? m.w : l.snap.k === "crab" ? 250 : 30 };
+      return { ...l.snap!, w: m ? m.w : l.snap!.k === "crab" ? 250 : 30 };
     }
-    return item(l.pid);
+    return item(pidOf(l));
   };
 
   // Suggested total from menu prices; the user can override it by typing in the total field
@@ -222,9 +225,9 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
       });
       setPopId(id);
     } else {
-      const id = s.next;
+      const id = newId();
       update((d) => {
-        d.orders.push({ id: d.next++, name: n, ch, ...contact, lines: valid, amt: amtNum, ship: shipNum, stage: 0, date: day(0) });
+        d.orders.push({ id, name: n, ch, ...contact, lines: valid, amt: amtNum, ship: shipNum, stage: 0, date: day(0) });
       });
       setPopId(id);
     }
@@ -269,7 +272,7 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
           {legacy && <div className="sg">{t.oldItems}{legacy}</div>}
           {lines.map((l) => (
             <div className="ln" key={l.key}>
-              <select className="lp" value={l.pid} onChange={(e) => setLine(l.key, { pid: e.target.value, snap: e.target.value === OLD ? l.snap : undefined })}>
+              <select className="lp" value={pidOf(l)} onChange={(e) => setLine(l.key, { pid: e.target.value, snap: e.target.value === OLD ? l.snap : undefined })}>
                 {l.snap && <option value={OLD}>{l.snap.name} — {short(l.snap.price)}/kg · {t.atOrder}</option>}
                 {KINDS.map((k) => (
                   <optgroup key={k} label={kl(t, k)}>

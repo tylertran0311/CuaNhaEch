@@ -167,3 +167,10 @@ body{font-size:17px}
 .adr .a-no{flex:1 1 calc(25% - 10px)}.adr .a-street{flex:1 1 75%}
 .adr .a-ward,.adr .a-dist,.adr .a-city{flex:1 1 calc(33.333% - 10px)}
 @media(max-width:600px){.adr .a-ward,.adr .a-dist,.adr .a-city{flex:1 1 100%}}
+/* Sign-in and account */
+.topr{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.who{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);font-weight:700;flex-wrap:wrap;justify-content:flex-end}
+.login{max-width:520px;margin:30px auto}
+.login .add{margin:0}
+.bad-note{background:#ffd6e4}
+.ghost:disabled,.btn:disabled{opacity:.55;cursor:default}

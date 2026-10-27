@@ -29,6 +29,9 @@ export const CH = ["Facebook", "Zalo", "TikTok"];
 export const IC = ["⏳", "✅", "💸", "💖", "🍳", "🚚"];
 export const KINDS: Kind[] = ["crab", "shrimp"];
 
+/** Unique numeric id (time-based + random) so several people adding records at once don't collide */
+export const newId = () => Date.now() * 1000 + Math.floor(Math.random() * 1000);
+
 const p2 = (n: number) => ("0" + n).slice(-2);
 export const isoDate = (d: Date) => d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate());
 export function day(n: number) {
@@ -72,7 +75,7 @@ export function months() {
   return a;
 }
 
-function defMenu(): State["menu"] {
+export function defMenu(): State["menu"] {
   return {
     upd: "",
     items: [
@@ -107,11 +110,21 @@ function sample(): State {
   };
 }
 
+/** Data saved in this browser (before the database), or null if there is none */
+export function loadLocalRaw(): State | null {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY) || "null");
+    return s && s.orders ? migrate(s) : null;
+  } catch { return null; }
+}
+
 export function load(): State {
-  let s: State | null = null;
-  try { s = JSON.parse(localStorage.getItem(KEY) || "null"); } catch { s = null; }
-  if (!s || !s.orders) s = sample();
+  return loadLocalRaw() || sample();
+}
+
+function migrate(s: State): State {
   if (!s.menu) s.menu = defMenu();
+  if (!s.exp) s.exp = [];
   if (!s.v) {
     s.orders.forEach((o) => { o.stage = [1, 2, 2, 3, 4, 5][o.stage] || 0; });
     s.v = 2;

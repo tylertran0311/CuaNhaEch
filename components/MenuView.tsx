@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Money, useErrors, type ViewProps } from "./ui";
-import { KINDS, day, fd, kl, type Kind } from "@/lib/store";
+import { KINDS, day, fd, kl, newId, type Kind } from "@/lib/store";
 
 export default function MenuView({ s, t, update }: ViewProps) {
   const [k, setK] = useState<Kind>("crab");
@@ -30,7 +30,7 @@ export default function MenuView({ s, t, update }: ViewProps) {
     ]);
     if (!ok) return;
     update((d) => {
-      d.menu.items.push({ id: "u" + d.next++, k, name, price: Math.round(price * 1000), w: k === "crab" ? 250 : 30, sz: sz.trim() });
+      d.menu.items.push({ id: "u" + newId().toString(36), k, name, price: Math.round(price * 1000), w: k === "crab" ? 250 : 30, sz: sz.trim() });
       d.menu.upd = day(0);
     });
     setNm(""); setSz(""); setPr("");

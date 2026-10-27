@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Money, useErrors, type ViewProps } from "./ui";
-import { PAID, day, depIn, months, short, vnd } from "@/lib/store";
+import { PAID, day, depIn, months, newId, short, vnd } from "@/lib/store";
 
 export default function MoneyView({ s, t, update }: ViewProps) {
   const [label, setLabel] = useState("");
@@ -30,7 +30,7 @@ export default function MoneyView({ s, t, update }: ViewProps) {
       { key: "ea", ok: a > 0, label: t.amt },
     ]);
     if (!ok) return;
-    update((d) => { d.exp.push({ id: d.next++, label: l, amt: Math.round(a * 1000), date: day(0) }); });
+    update((d) => { d.exp.push({ id: newId(), label: l, amt: Math.round(a * 1000), date: day(0) }); });
     setLabel(""); setAmt("");
   }
 
