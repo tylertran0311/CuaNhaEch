@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Money, useErrors, type ViewProps } from "./ui";
-import { Combobox, DatePicker, TimePicker } from "./Pickers";
+import { Combobox, DatePicker, Select, TimePicker } from "./Pickers";
 import type { Dict } from "@/lib/i18n";
 import { formatVN, isVNPhone } from "@/lib/phone";
 import { EMPTY_ADDR, PROVINCES, composeAddr, fold, loadGeo, type Address, type Geo } from "@/lib/address";
@@ -165,7 +165,7 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
     return () => clearTimeout(id);
   }, [popId]);
 
-  // Districts and wards of the chosen province, loaded when the province changes
+  // Wards (and old districts) of the chosen province, loaded when the province changes
   const [geo, setGeo] = useState<Geo | null>(null);
   useEffect(() => {
     let alive = true;
@@ -173,14 +173,8 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
     return () => { alive = false; };
   }, [ad.city]);
   const cityOpts = useMemo(() => PROVINCES.map((p) => ({ value: p })), []);
-  const distOpts = useMemo(() => (geo || []).map(([d, o]) => ({ value: d, hint: o })), [geo]);
-  const wardOpts = useMemo(() => {
-    const ws = geo?.find(([d]) => fold(d) === fold(ad.dist.trim()))?.[2]
-      // No district picked (or typed by hand): offer every ward in the province, labelled with its district
-      ?? (ad.dist.trim() ? [] : null);
-    if (ws) return ws.map((w) => ({ value: w }));
-    return (geo || []).flatMap(([d, , w]) => w.map((x) => ({ value: x, hint: d })));
-  }, [geo, ad.dist]);
+  const distOpts = useMemo(() => (geo?.d || []).map(([d, o]) => ({ value: d, hint: o ? `${o} ${t.oldUnit}` : t.oldUnit })), [geo, t]);
+  const wardOpts = useMemo(() => (geo?.w || []).map((w) => ({ value: w })), [geo]);
 
   // Past customers, newest order first, with the phone and address they last used
   const custs = useMemo(() => {
@@ -209,6 +203,12 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
   // A line whose item was removed from the menu (here or on another device) falls back to the first item
   const firstId = KINDS.flatMap((k) => s.menu.items.filter((i) => i.k === k))[0]?.id ?? "";
   const pidOf = (l: FormLine) => (l.pid === OLD && l.snap ? OLD : item(l.pid) ? l.pid : firstId);
+  // Dish choices grouped by kind; a line being edited also offers the item at the price it was ordered at
+  const dishOpts = (l: FormLine) => [
+    ...(l.snap ? [{ value: OLD, label: `${l.snap.name} — ${short(l.snap.price)}/kg`, hint: t.atOrder }] : []),
+    ...KINDS.flatMap((k) => s.menu.items.filter((i) => i.k === k)
+      .map((i) => ({ value: i.id, label: `${i.name} — ${short(i.price)}/kg`, group: kl(t, k) }))),
+  ];
   const resolve = (l: FormLine) => {
     if (pidOf(l) === OLD) {
       const m = s.menu.items.find((i) => i.k === l.snap!.k && i.name === l.snap!.name);
@@ -346,9 +346,7 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
           {editing ? <div className="edh">✎ {t.editing}<b>{editing.name}</b></div> : <b>📝 {t.newOrder}</b>}
           {!editing && <button type="button" className="ghost" onClick={() => showForm(false)}>{t.fold}</button>}
         </div>
-        <select value={ch} onChange={(e) => setCh(e.target.value)}>
-          {CH.map((c) => <option key={c}>{c}</option>)}
-        </select>
+        <Select className="a-ch" value={ch} onChange={setCh} options={CH} label={t.chLbl} />
         <Combobox className="a-name" bad={bad.n} placeholder={t.name} value={name} onChange={setName} options={custOpts} onPick={pickCustomer} />
         <input className={bad.ph ? "bad" : ""} type="tel" inputMode="tel" autoComplete="off" placeholder={t.phone}
           value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={() => setPhone(formatVN(phone))} />
@@ -358,15 +356,14 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
             <input key={k} className={`a-${k}`} autoComplete="off" placeholder={ph} value={ad[k]}
               onChange={(e) => setAd((a) => ({ ...a, [k]: e.target.value }))} />
           ))}
-          {/* Province → district → ward: each list follows the one before it; anything can still be typed by hand */}
+          {/* Province → its current wards; the old district is optional. Anything can still be typed by hand */}
           <Combobox className="a-city" placeholder={t.adCity} value={ad.city} options={cityOpts} noMatch={t.noMatch}
             onChange={(v) => setAd((a) => ({ ...a, city: v }))}
             onPick={(o) => { if (o.value !== ad.city) setAd((a) => ({ ...a, city: o.value, dist: "", ward: "" })); }} />
-          <Combobox className="a-dist" placeholder={t.adDist} value={ad.dist} options={distOpts} noMatch={t.noMatch}
-            onChange={(v) => setAd((a) => ({ ...a, dist: v }))}
-            onPick={(o) => { if (o.value !== ad.dist) setAd((a) => ({ ...a, dist: o.value, ward: "" })); }} />
           <Combobox className="a-ward" placeholder={t.adWard} value={ad.ward} options={wardOpts} noMatch={t.noMatch}
             onChange={(v) => setAd((a) => ({ ...a, ward: v }))} />
+          <Combobox className="a-dist" placeholder={t.adDist} value={ad.dist} options={distOpts} noMatch={t.noMatch}
+            onChange={(v) => setAd((a) => ({ ...a, dist: v }))} />
         </fieldset>
         <DatePicker className="dt" label={t.dDate} value={dDate} onChange={setDDate} t={t} clearable />
         <TimePicker className="dt" label={t.dTime} value={dTime} onChange={setDTime} t={t} />
@@ -379,16 +376,8 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
           {legacy && <div className="sg">{t.oldItems}{legacy}</div>}
           {lines.map((l) => (
             <div className="ln" key={l.key}>
-              <select className="lp" value={pidOf(l)} onChange={(e) => setLine(l.key, { pid: e.target.value, snap: e.target.value === OLD ? l.snap : undefined })}>
-                {l.snap && <option value={OLD}>{l.snap.name} — {short(l.snap.price)}/kg · {t.atOrder}</option>}
-                {KINDS.map((k) => (
-                  <optgroup key={k} label={kl(t, k)}>
-                    {s.menu.items.filter((i) => i.k === k).map((i) => (
-                      <option key={i.id} value={i.id}>{i.name} — {short(i.price)}/kg</option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
+              <Select className="lp" label={t.itemMiss} value={pidOf(l)} options={dishOpts(l)}
+                onChange={(v) => setLine(l.key, { pid: v, snap: v === OLD ? l.snap : undefined })} />
               <label className={`u lq${bad.lines ? " bad" : ""}`}>
                 <input type="number" min="0" step="any" inputMode="decimal"
                   placeholder={t.qty} value={l.q} onChange={(e) => setLine(l.key, { q: e.target.value })} />

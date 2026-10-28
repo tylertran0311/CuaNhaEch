@@ -35,8 +35,11 @@ export const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").rep
 /** File name for a province's data in public/vn (same rule as scripts/build-vn-address.mjs) */
 export const slugVN = (s: string) => fold(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-/** Pre-2025 districts of a province (with the old province they belonged to, when several merged) and their wards */
-export type Geo = [district: string, oldProvince: string, wards: string[]][];
+/**
+ * A province's current wards/communes (w), plus its pre-2025 districts (d, with the old province they belonged to
+ * when several merged). Wards hang directly off the province now, so the district is only an optional extra.
+ */
+export interface Geo { w: string[]; d: [district: string, oldProvince: string][] }
 const geoCache = new Map<string, Promise<Geo | null>>();
 
 /** Districts and wards for one of the 34 provinces; null for anything else (typed by hand) */

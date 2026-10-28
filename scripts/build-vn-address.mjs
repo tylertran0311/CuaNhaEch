@@ -1,10 +1,12 @@
-// Builds public/vn/<province>.json: the districts and wards for each of the 34 provinces (after the 2025 merger).
-// Customers still give pre-merger addresses (district + ward), so each new province lists the old districts and
-// wards of every old province that merged into it. Source: provinces.open-api.vn (GSO administrative units, pre-2025).
+// Builds public/vn/<province>.json for each of the 34 provinces (after the 1/7/2025 merger):
+//   { w: current wards/communes (two-level system, no districts),
+//     d: [old district, old province][] — pre-merger districts, kept as optional suggestions since customers still use them }
+// Source: provinces.open-api.vn (GSO administrative units): v2 = current units, v1 = pre-2025 units.
 //   node scripts/build-vn-address.mjs
 import { mkdirSync, writeFileSync } from "node:fs";
 
-const SRC = "https://provinces.open-api.vn/api/v1/?depth=3";
+const SRC_NEW = "https://provinces.open-api.vn/api/v2/?depth=2";
+const SRC = "https://provinces.open-api.vn/api/v1/?depth=2";
 
 // New province → the old provinces it was formed from (Resolution 202/2025/QH15)
 const MERGED = {
@@ -49,21 +51,31 @@ const slug = (s) => s.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d"
   .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const bare = (s) => s.replace(/^(Tỉnh|Thành phố) /, "");
 
-const data = await (await fetch(SRC)).json();
-const byName = new Map(data.map((p) => [bare(p.name), p]));
+// The app writes Ho Chi Minh City as "TP. Hồ Chí Minh"; every other province matches by its bare name
+const appName = (s) => (bare(s) === "Hồ Chí Minh" ? "TP. Hồ Chí Minh" : bare(s));
+
+const [cur, old] = await Promise.all([SRC_NEW, SRC].map(async (u) => (await fetch(u)).json()));
+const newByName = new Map(cur.map((p) => [appName(p.name), p]));
+const oldByName = new Map(old.map((p) => [bare(p.name), p]));
 const used = new Set();
 mkdirSync("public/vn", { recursive: true });
 
+let wards = 0;
 for (const [prov, olds] of Object.entries(MERGED)) {
-  // [district, old province (only when several merged), wards[]]
-  const out = olds.flatMap((o) => {
-    const p = byName.get(o);
-    if (!p) throw new Error("Missing old province " + o);
+  const p = newByName.get(prov);
+  if (!p) throw new Error("Missing province " + prov);
+  const d = olds.flatMap((o) => {
+    const q = oldByName.get(o);
+    if (!q) throw new Error("Missing old province " + o);
     used.add(o);
-    return p.districts.map((d) => [d.name, olds.length > 1 ? o : "", d.wards.map((w) => w.name)]);
+    return q.districts.map((x) => [x.name, olds.length > 1 ? o : ""]);
   });
-  writeFileSync(`public/vn/${slug(prov)}.json`, JSON.stringify(out));
+  // A–Z (Vietnamese order) so a long list is easy to scan
+  const w = p.wards.map((x) => x.name).sort(new Intl.Collator("vi").compare);
+  wards += w.length;
+  writeFileSync(`public/vn/${slug(prov)}.json`, JSON.stringify({ w, d }));
 }
-const left = [...byName.keys()].filter((k) => !used.has(k));
+const left = [...oldByName.keys()].filter((k) => !used.has(k));
 if (left.length) throw new Error("Old provinces not mapped: " + left.join(", "));
-console.log(`Wrote ${Object.keys(MERGED).length} provinces from ${used.size} old ones`);
+if (newByName.size !== Object.keys(MERGED).length) throw new Error("Province count changed: " + newByName.size);
+console.log(`Wrote ${Object.keys(MERGED).length} provinces, ${wards} wards`);

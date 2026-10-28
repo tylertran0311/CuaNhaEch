@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Money, useErrors, type ViewProps } from "./ui";
+import { Select } from "./Pickers";
 import { KINDS, day, fd, kl, newId, type Kind } from "@/lib/store";
 
 export default function MenuView({ s, t, update }: ViewProps) {
@@ -65,9 +66,7 @@ export default function MenuView({ s, t, update }: ViewProps) {
       <div className="panel">
         <h2>{t.addItem}</h2>
         <form className="add" style={{ border: 0, padding: 0, margin: 0 }} onSubmit={addItem}>
-          <select value={k} onChange={(e) => setK(e.target.value as Kind)}>
-            {KINDS.map((x) => <option key={x} value={x}>{kl(t, x)}</option>)}
-          </select>
+          <Select className="a-kind" value={k} onChange={(v) => setK(v as Kind)} options={KINDS.map((x) => ({ value: x, label: kl(t, x) }))} />
           <input className={bad.mnm ? "bad" : ""} placeholder={t.itemName} value={nm} onChange={(e) => setNm(e.target.value)} />
           <input placeholder={t.itemSize} value={sz} onChange={(e) => setSz(e.target.value)} />
           <Money value={pr} onChange={setPr} placeholder={t.price} bad={bad.mpr} />

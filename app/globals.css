@@ -51,7 +51,7 @@ input:focus,select:focus{box-shadow:0 0 0 4px var(--pk2)}
 .note{background:var(--sun);border:2px dashed var(--ink);border-radius:14px;padding:8px 14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:14px;font-weight:500}
 .note::before{content:"✦";animation:tw 2s infinite}
 .lines{flex:1 1 100%;display:flex;flex-direction:column;gap:8px}
-.ln{display:flex;gap:8px}.ln select.lp{flex:2 1 160px}.ln .lq{flex:1 1 80px}.ln select.lu{flex:0 0 78px}.ln .x{flex:0 0 auto}
+.ln{display:flex;gap:8px}.ln .lp{flex:2 1 160px}.ln .lq{flex:1 1 80px}
 .al{flex:0 0 auto}
 .sg{color:var(--mut);font-size:13px;min-height:18px;margin:0 2px 4px}
 .board{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
@@ -189,7 +189,7 @@ body{font-size:17px}
 @media(max-width:600px){
   /* Item line: dish on its own row, quantity / unit / remove below */
   .ln{flex-wrap:wrap}
-  .ln select.lp{flex:1 1 100%}
+  .ln .lp{flex:1 1 100%}
   .ln .u.lq{flex:1 1 0}
   .adr .a-no{flex:1 1 100%}.adr .a-street{flex:1 1 100%}
   .add>.u:not(.dt){flex:1 1 100%}
@@ -272,9 +272,7 @@ body{background-attachment:fixed}
 /* ---------- Themed pickers: searchable dropdowns, date and time ---------- */
 .cb,.pk{position:relative;min-width:0}
 .add>.cb{flex:1 1 130px}
-.cb input{width:100%;padding-right:30px}
-.cb-car{position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--mut);font-size:12px;transition:transform .15s}
-.cb.open .cb-car{transform:translateY(-50%) rotate(180deg)}
+.cb input{width:100%}
 .pop{background:var(--wh);border:2px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--ink);z-index:60;animation:popin .14s ease-out}
 @keyframes popin{from{opacity:0;transform:translateY(-4px)}}
 .cb-list{position:absolute;left:0;right:0;top:calc(100% + 6px);min-width:220px;max-height:280px;overflow:auto;margin:0;padding:6px;list-style:none;overscroll-behavior:contain}
@@ -333,3 +331,34 @@ body{background-attachment:fixed}
 @media(max-width:600px){.daybar .daypk{flex:1 1 150px;min-width:150px}}
 .add>.pk.dt{flex:0 1 265px}
 @media(max-width:600px){.add>.pk.dt{flex:1 1 calc(50% - 5px)}}
+/* Doodle dropdowns: hand-drawn chevron that flips up while the list is open, tap again to close */
+.add>.sl{flex:1 1 130px}
+.cb input{padding-right:44px}
+.dd-tog{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:grid;place-items:center;padding:0;border:0;border-radius:10px;background:none;color:var(--ink);cursor:pointer;transition:background .15s}
+.cb .dd-tog:hover{background:var(--pk2)}
+.dd-chev{transition:transform .25s cubic-bezier(.3,1.5,.5,1)}
+.cb.open .dd-chev,.sl.open .dd-chev{transform:rotate(180deg)}
+.sl{position:relative;min-width:0}
+.sl-btn{position:relative;width:100%;display:flex;align-items:center;font:inherit;color:var(--ink);background:var(--wh);border:2px solid var(--ink);border-radius:12px;padding:10px 44px 10px 12px;cursor:pointer;text-align:left;transition:box-shadow .15s}
+.sl-btn>span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sl.open .sl-btn,.cb.open input{box-shadow:0 0 0 4px var(--pk2)}
+.sl .cb-list{min-width:100%}
+@media(max-width:600px){.add>.sl{flex:1 1 100%}}
+/* Group headings inside a dropdown (e.g. Cua / Tôm in the dish list) */
+.cb-list li.grp{cursor:default;padding:8px 10px 3px;font:800 12px var(--font-baloo),sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);background:none}
+.cb-list li.grp:not(:first-child){margin-top:4px;border-top:1.5px dashed var(--ln)}
+.add>.sl.a-kind{flex:0 1 160px}
+@media(max-width:600px){.add>.sl.a-kind{flex:1 1 100%}}
+/* Doodle scrollbars: chunky pink thumb with an ink outline, on the page and inside dropdowns */
+html,.cb-list{scrollbar-width:thin;scrollbar-color:var(--pk) transparent}
+@supports selector(::-webkit-scrollbar){
+  html,.cb-list{scrollbar-width:auto;scrollbar-color:auto}
+  ::-webkit-scrollbar{width:14px;height:14px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--pk2);border:2px solid var(--ink);border-radius:999px;background-clip:padding-box;box-shadow:inset 0 0 0 2px var(--wh)}
+  ::-webkit-scrollbar-thumb:hover{background:var(--pk)}
+  ::-webkit-scrollbar-corner{background:transparent}
+  ::-webkit-scrollbar-button{display:none;width:0;height:0}
+  .cb-list::-webkit-scrollbar{width:12px}
+  .cb-list::-webkit-scrollbar-track{margin:8px 0}
+}
