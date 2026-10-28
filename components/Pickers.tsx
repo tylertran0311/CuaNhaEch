@@ -1,0 +1,188 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { Dict } from "@/lib/i18n";
+import { fold } from "@/lib/address";
+import { isoDate } from "@/lib/store";
+
+/** Closes a popup on outside click or Escape */
+function useDismiss(open: boolean, close: () => void, ref: React.RefObject<HTMLElement | null>) {
+  const closeRef = useRef(close);
+  closeRef.current = close;
+  useEffect(() => {
+    if (!open) return;
+    const down = (e: PointerEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) closeRef.current(); };
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") closeRef.current(); };
+    document.addEventListener("pointerdown", down);
+    document.addEventListener("keydown", key);
+    return () => { document.removeEventListener("pointerdown", down); document.removeEventListener("keydown", key); };
+  }, [open, ref]);
+}
+
+export interface Opt { value: string; hint?: string }
+
+/**
+ * Text field with a searchable suggestion list. Typing anything is allowed (values not in the list are kept),
+ * so it works both as a picker (province, district, ward) and as autocomplete (customer names).
+ */
+export function Combobox({ value, onChange, onPick, options, placeholder, className = "", bad, noMatch, inputProps }: {
+  value: string; onChange: (v: string) => void; onPick?: (o: Opt) => void; options: Opt[]; placeholder: string;
+  className?: string; bad?: boolean; noMatch?: string; inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
+}) {
+  const [open, setOpen] = useState(false);
+  // What the user typed since opening; "" lists everything
+  const [query, setQuery] = useState("");
+  const [act, setAct] = useState(0);
+  const box = useRef<HTMLDivElement>(null);
+  const list = useRef<HTMLUListElement>(null);
+  useDismiss(open, () => setOpen(false), box);
+
+  const shown = useMemo(() => {
+    const q = fold(query.trim());
+    const hits = q ? options.filter((o) => fold(o.value + " " + (o.hint || "")).includes(q)) : options;
+    return hits.slice(0, 80);
+  }, [options, query]);
+
+  useEffect(() => { list.current?.children[act]?.scrollIntoView({ block: "nearest" }); }, [act]);
+
+  function pick(o: Opt) {
+    onChange(o.value);
+    onPick?.(o);
+    setOpen(false);
+  }
+
+  function key(e: React.KeyboardEvent) {
+    if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); setAct((a) => Math.min(a + 1, shown.length - 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setAct((a) => Math.max(a - 1, 0)); }
+    else if (e.key === "Enter" && open && shown[act]) { e.preventDefault(); pick(shown[act]); }
+    else if (e.key === "Tab") setOpen(false);
+  }
+
+  return (
+    <div ref={box} className={`cb ${className}${open ? " open" : ""}`}>
+      <input {...inputProps} className={bad ? "bad" : ""} placeholder={placeholder} value={value} autoComplete="off"
+        role="combobox" aria-expanded={open} aria-autocomplete="list"
+        onFocus={() => { setQuery(""); setAct(0); setOpen(true); }}
+        onChange={(e) => { onChange(e.target.value); setQuery(e.target.value); setAct(0); setOpen(true); }}
+        onKeyDown={key} />
+      <span className="cb-car" aria-hidden="true">▾</span>
+      {open && (shown.length > 0 || (noMatch && query)) && (
+        <ul ref={list} className="pop cb-list" role="listbox">
+          {shown.map((o, i) => (
+            <li key={o.value + i} role="option" aria-selected={o.value === value}
+              className={`${i === act ? "act" : ""}${o.value === value ? " sel" : ""}`}
+              onPointerDown={(e) => e.preventDefault()} onClick={() => pick(o)} onPointerEnter={() => setAct(i)}>
+              <span>{o.value}</span>{o.hint && <small>{o.hint}</small>}
+            </li>
+          ))}
+          {!shown.length && <li className="none">{noMatch}</li>}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** Popup that drops under its field on wide screens and becomes a bottom sheet on phones */
+function Sheet({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
+  if (!open) return null;
+  return (
+    <>
+      <div className="sheet-bg" onClick={onClose} />
+      <div className="pop sheet" role="dialog">{children}</div>
+    </>
+  );
+}
+
+const ymd = (d: string) => new Date(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8));
+
+/** Themed date field with a month calendar (Monday first) */
+export function DatePicker({ value, onChange, t, label, clearable, className = "" }: {
+  value: string; onChange: (v: string) => void; t: Dict; label?: string; clearable?: boolean; className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState(() => (value ? ymd(value) : new Date()));
+  const box = useRef<HTMLDivElement>(null);
+  useDismiss(open, () => setOpen(false), box);
+
+  const today = isoDate(new Date());
+  const y = view.getFullYear(), m = view.getMonth();
+  const lead = (new Date(y, m, 1).getDay() + 6) % 7;
+  const n = new Date(y, m + 1, 0).getDate();
+  const cells = [...Array(lead).fill(""), ...Array.from({ length: n }, (_, i) => isoDate(new Date(y, m, i + 1)))];
+  // "T4, 28/10"; the year is only shown when it isn't this year
+  const yr = value && value.slice(0, 4) !== today.slice(0, 4) ? "/" + value.slice(0, 4) : "";
+  const shownText = value ? `${t.wd[ymd(value).getDay()]}, ${value.slice(8)}/${value.slice(5, 7)}${yr}` : "";
+
+  function toggle() {
+    if (!open) setView(value ? ymd(value) : new Date());
+    setOpen(!open);
+  }
+  const choose = (d: string) => { onChange(d); setOpen(false); };
+
+  return (
+    <div ref={box} className={`pk ${className}${open ? " open" : ""}`}>
+      <button type="button" className="pk-btn" onClick={toggle} aria-haspopup="dialog" aria-expanded={open}>
+        {label && <span className="pk-lbl">{label}</span>}
+        <b className={value ? "" : "ph"}>{shownText || t.pickDate}</b>
+        <span className="pk-ic" aria-hidden="true">📅</span>
+      </button>
+      <Sheet open={open} onClose={() => setOpen(false)}>
+        <div className="cal-h">
+          <button type="button" className="ghost" aria-label={t.calPrev} onClick={() => setView(new Date(y, m - 1, 1))}>‹</button>
+          <b>{t.months[m]} {y}</b>
+          <button type="button" className="ghost" aria-label={t.calNext} onClick={() => setView(new Date(y, m + 1, 1))}>›</button>
+        </div>
+        <div className="cal-g">
+          {[1, 2, 3, 4, 5, 6, 0].map((d) => <span key={d} className="cal-wd">{t.wd[d]}</span>)}
+          {cells.map((d, i) => d
+            ? <button type="button" key={d} className={`${d === value ? "sel" : ""}${d === today ? " now" : ""}`} onClick={() => choose(d)}>{+d.slice(8)}</button>
+            : <span key={"e" + i} />)}
+        </div>
+        <div className="pk-foot">
+          <button type="button" className="ghost" onClick={() => choose(today)}>{t.today}</button>
+          {clearable && value && <button type="button" className="ghost" onClick={() => choose("")}>{t.clear}</button>}
+        </div>
+      </Sheet>
+    </div>
+  );
+}
+
+const p2 = (n: number) => String(n).padStart(2, "0");
+
+/** Themed time field: pick the hour, then optionally the minutes */
+export function TimePicker({ value, onChange, t, label, className = "" }: {
+  value: string; onChange: (v: string) => void; t: Dict; label?: string; className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useDismiss(open, () => setOpen(false), box);
+  const [h, mm] = value ? value.split(":") : ["", ""];
+
+  return (
+    <div ref={box} className={`pk ${className}${open ? " open" : ""}`}>
+      <button type="button" className="pk-btn" onClick={() => setOpen(!open)} aria-haspopup="dialog" aria-expanded={open}>
+        {label && <span className="pk-lbl">{label}</span>}
+        <b className={value ? "" : "ph"}>{value || t.pickTime}</b>
+        <span className="pk-ic" aria-hidden="true">🕒</span>
+      </button>
+      <Sheet open={open} onClose={() => setOpen(false)}>
+        <div className="tp-t">{t.hour}</div>
+        <div className="tp-h">
+          {Array.from({ length: 24 }, (_, i) => p2(i)).map((x) => (
+            <button type="button" key={x} className={x === h ? "sel" : ""} onClick={() => onChange(`${x}:${mm || "00"}`)}>{x}</button>
+          ))}
+        </div>
+        <div className="tp-t">{t.minute}</div>
+        <div className="tp-m">
+          {["00", "15", "30", "45"].map((x) => (
+            <button type="button" key={x} className={x === mm ? "sel" : ""} onClick={() => { onChange(`${h || p2(new Date().getHours())}:${x}`); setOpen(false); }}>:{x}</button>
+          ))}
+        </div>
+        <div className="pk-foot">
+          <button type="button" className="btn" onClick={() => setOpen(false)}>{t.done}</button>
+          {value && <button type="button" className="ghost" onClick={() => { onChange(""); setOpen(false); }}>{t.clear}</button>}
+        </div>
+      </Sheet>
+    </div>
+  );
+}

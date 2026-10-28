@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Money, useErrors, type ViewProps } from "./ui";
+import { Combobox, DatePicker, TimePicker } from "./Pickers";
 import type { Dict } from "@/lib/i18n";
 import { formatVN, isVNPhone } from "@/lib/phone";
-import { EMPTY_ADDR, PROVINCES, composeAddr, type Address } from "@/lib/address";
+import { EMPTY_ADDR, PROVINCES, composeAddr, fold, loadGeo, type Address, type Geo } from "@/lib/address";
 import { CH, DEPOSITED, IC, KINDS, PAID, SHIPPED, addrOf, byWhen, day, deposit, dueAfterDeposit, isoDate, moveTo, newId, steamFeeFor, stillDue, fd, fdw, kl, short, vnd, type Kind, type Line, type Order, type State, type Unit } from "@/lib/store";
 
 // When editing, a line starts on its saved snapshot (pid === OLD) so the order keeps the price it was placed at
@@ -164,6 +165,39 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
     return () => clearTimeout(id);
   }, [popId]);
 
+  // Districts and wards of the chosen province, loaded when the province changes
+  const [geo, setGeo] = useState<Geo | null>(null);
+  useEffect(() => {
+    let alive = true;
+    loadGeo(ad.city).then((g) => { if (alive) setGeo(g); });
+    return () => { alive = false; };
+  }, [ad.city]);
+  const cityOpts = useMemo(() => PROVINCES.map((p) => ({ value: p })), []);
+  const distOpts = useMemo(() => (geo || []).map(([d, o]) => ({ value: d, hint: o })), [geo]);
+  const wardOpts = useMemo(() => {
+    const ws = geo?.find(([d]) => fold(d) === fold(ad.dist.trim()))?.[2]
+      // No district picked (or typed by hand): offer every ward in the province, labelled with its district
+      ?? (ad.dist.trim() ? [] : null);
+    if (ws) return ws.map((w) => ({ value: w }));
+    return (geo || []).flatMap(([d, , w]) => w.map((x) => ({ value: x, hint: d })));
+  }, [geo, ad.dist]);
+
+  // Past customers, newest order first, with the phone and address they last used
+  const custs = useMemo(() => {
+    const m = new Map<string, Order>();
+    [...s.orders].sort((a, b) => b.id - a.id).forEach((o) => { const k = fold(o.name.trim()); if (k && !m.has(k)) m.set(k, o); });
+    return m;
+  }, [s.orders]);
+  const custOpts = useMemo(() => [...custs.values()].map((o) => ({ value: o.name, hint: o.phone || t.pastCust })), [custs, t]);
+  function pickCustomer(o: { value: string }) {
+    const c = custs.get(fold(o.value.trim()));
+    if (!c) return;
+    if (c.phone) setPhone(c.phone);
+    setCh(c.ch);
+    // Fill the address too, unless something was already typed there
+    if (!Object.values(ad).some((v) => v.trim())) setAd(c.ad ? { ...EMPTY_ADDR, ...c.ad } : { ...EMPTY_ADDR, street: c.addr || "" });
+  }
+
   function move(id: number, stage: number) {
     update((d) => { const o = d.orders.find((x) => x.id === id); if (o) moveTo(o, stage); });
     setPopId(id);
@@ -315,20 +349,27 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
         <select value={ch} onChange={(e) => setCh(e.target.value)}>
           {CH.map((c) => <option key={c}>{c}</option>)}
         </select>
-        <input className={bad.n ? "bad" : ""} placeholder={t.name} value={name} onChange={(e) => setName(e.target.value)} />
+        <Combobox className="a-name" bad={bad.n} placeholder={t.name} value={name} onChange={setName} options={custOpts} onPick={pickCustomer} />
         <input className={bad.ph ? "bad" : ""} type="tel" inputMode="tel" autoComplete="off" placeholder={t.phone}
           value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={() => setPhone(formatVN(phone))} />
         <fieldset className="adr">
           <legend>📍 {t.addr}</legend>
-          {([["no", t.adNo], ["street", t.adStreet], ["ward", t.adWard], ["dist", t.adDist], ["city", t.adCity]] as const).map(([k, ph]) => (
+          {([["no", t.adNo], ["street", t.adStreet]] as const).map(([k, ph]) => (
             <input key={k} className={`a-${k}`} autoComplete="off" placeholder={ph} value={ad[k]}
-              list={k === "city" ? "provinces" : undefined}
               onChange={(e) => setAd((a) => ({ ...a, [k]: e.target.value }))} />
           ))}
-          <datalist id="provinces">{PROVINCES.map((p) => <option key={p} value={p} />)}</datalist>
+          {/* Province → district → ward: each list follows the one before it; anything can still be typed by hand */}
+          <Combobox className="a-city" placeholder={t.adCity} value={ad.city} options={cityOpts} noMatch={t.noMatch}
+            onChange={(v) => setAd((a) => ({ ...a, city: v }))}
+            onPick={(o) => { if (o.value !== ad.city) setAd((a) => ({ ...a, city: o.value, dist: "", ward: "" })); }} />
+          <Combobox className="a-dist" placeholder={t.adDist} value={ad.dist} options={distOpts} noMatch={t.noMatch}
+            onChange={(v) => setAd((a) => ({ ...a, dist: v }))}
+            onPick={(o) => { if (o.value !== ad.dist) setAd((a) => ({ ...a, dist: o.value, ward: "" })); }} />
+          <Combobox className="a-ward" placeholder={t.adWard} value={ad.ward} options={wardOpts} noMatch={t.noMatch}
+            onChange={(v) => setAd((a) => ({ ...a, ward: v }))} />
         </fieldset>
-        <label className="u dt"><span>{t.dDate}</span><input type="date" value={dDate} onChange={(e) => setDDate(e.target.value)} /></label>
-        <label className="u dt"><span>{t.dTime}</span><input type="time" value={dTime} onChange={(e) => setDTime(e.target.value)} /></label>
+        <DatePicker className="dt" label={t.dDate} value={dDate} onChange={setDDate} t={t} clearable />
+        <TimePicker className="dt" label={t.dTime} value={dTime} onChange={setDTime} t={t} />
         <div className="opts">
           <label className={`opt${steam ? " on" : ""}`}><input type="checkbox" checked={steam} onChange={(e) => setSteam(e.target.checked)} /> 🔥 {t.steam}</label>
           <label className={`opt${live ? " on" : ""}`}><input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} /> 📺 {t.live}</label>
@@ -390,7 +431,7 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
       <div className="calbar daybar">
         <h2>🗓 {focus === "" ? t.dayAllT : focus === "none" ? t.dayNone : `${t.dayOrders} ${fdw(t, focus)}`} <small>· {shown.length} {t.ords}</small></h2>
         <button className="ghost" aria-label={t.dayPrev} title={t.dayPrev} onClick={() => setFocus(shiftDay(dayOf, -1))}>←</button>
-        <input type="date" value={dayOf} onChange={(e) => e.target.value && setFocus(e.target.value)} />
+        <DatePicker className="daypk" value={dayOf} onChange={(v) => v && setFocus(v)} t={t} />
         <button className="ghost" aria-label={t.dayNext} title={t.dayNext} onClick={() => setFocus(shiftDay(dayOf, 1))}>→</button>
         <button className={`ghost${focus === day(0) ? " on" : ""}`} onClick={() => setFocus(day(0))}>{t.today}</button>
         <button className={`ghost${focus === "none" ? " on" : ""}`} onClick={() => setFocus("none")}>{t.dayNone} ({noDate})</button>

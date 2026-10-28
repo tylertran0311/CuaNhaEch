@@ -18,11 +18,37 @@ const HAS_STREET = /^(đường|hẻm|ngõ|ngách|kiệt|quốc lộ|tỉnh lộ
 const HAS_WARD = /^(phường|xã|thị trấn|đặc khu)(\s|$)|^(p|x|tt)\./iu;
 const HAS_DIST = /^(quận|huyện|thị xã|thành phố)(\s|$)|^(q|h|tx|tp)\./iu;
 const prefix = (v: string, has: RegExp, p: string) => (v && !has.test(v) ? p + v : v);
+// Full unit names (as picked from the lists) are written short: "Phường Tân Phong" → "P.Tân Phong", "Quận 7" → "Q.7"
+const SHORT: [RegExp, string][] = [[/^Phường /iu, "P."], [/^Quận /iu, "Q."], [/^Huyện /iu, "H."], [/^Thị trấn /iu, "TT."], [/^Thị xã /iu, "TX."], [/^Thành phố /iu, "TP."]];
+const short = (v: string) => SHORT.reduce((s, [re, p]) => s.replace(re, p), v);
 
 /** "47 đường 75, P.Tân Phong, Q.7, TP. Hồ Chí Minh" — empty parts are skipped */
 export function composeAddr(a: Address) {
   const street = prefix(a.street.trim(), HAS_STREET, "đường ");
-  const ward = prefix(a.ward.trim(), HAS_WARD, "P.");
-  const dist = prefix(a.dist.trim(), HAS_DIST, "Q.");
+  const ward = short(prefix(a.ward.trim(), HAS_WARD, "P."));
+  const dist = short(prefix(a.dist.trim(), HAS_DIST, "Q."));
   return [[a.no.trim(), street].filter(Boolean).join(" "), ward, dist, a.city.trim()].filter(Boolean).join(", ");
+}
+
+/** Lowercase without Vietnamese accents, for searching ("tan phong" finds "Phường Tân Phong") */
+export const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "d").toLowerCase();
+/** File name for a province's data in public/vn (same rule as scripts/build-vn-address.mjs) */
+export const slugVN = (s: string) => fold(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+/** Pre-2025 districts of a province (with the old province they belonged to, when several merged) and their wards */
+export type Geo = [district: string, oldProvince: string, wards: string[]][];
+const geoCache = new Map<string, Promise<Geo | null>>();
+
+/** Districts and wards for one of the 34 provinces; null for anything else (typed by hand) */
+export function loadGeo(city: string): Promise<Geo | null> {
+  const p = PROVINCES.find((x) => fold(x) === fold(city.trim()));
+  if (!p) return Promise.resolve(null);
+  let q = geoCache.get(p);
+  if (!q) {
+    q = fetch(`/vn/${slugVN(p)}.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    // Don't keep a failed load, so the next try fetches again
+    q.then((g) => { if (!g) geoCache.delete(p); });
+    geoCache.set(p, q);
+  }
+  return q;
 }
