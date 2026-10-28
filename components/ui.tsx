@@ -61,7 +61,7 @@ export function CopyBtn({ text, label }: { text: string; label: string }) {
   return (
     <button type="button" className={`cpy${ok ? " ok" : ""}`} title={label} aria-label={label} onClick={copy}>
       {ok ? "✓" : (
-        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M9 8.5c0-1.4.6-2 2-2h6.6c1.3 0 1.9.6 1.9 2v7.8c0 1.3-.6 1.9-1.9 1.9H11c-1.4 0-2-.6-2-1.9z" />
           <path d="M15 6.4V5.7c0-1.3-.6-1.9-1.9-1.9H6.4c-1.3 0-1.9.6-1.9 1.9v7.8c0 1.4.6 2 1.9 2H9" />
         </svg>
