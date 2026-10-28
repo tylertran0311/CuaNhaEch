@@ -1,12 +1,13 @@
 // Builds public/vn/<province>.json for each of the 34 provinces (after the 1/7/2025 merger):
 //   { w: current wards/communes (two-level system, no districts),
-//     d: [old district, old province][] — pre-merger districts, kept as optional suggestions since customers still use them }
+//     d: [old district, old province, old wards[]][] — pre-merger districts and their wards, since customers still
+//        give addresses the old way (district + ward) }
 // Source: provinces.open-api.vn (GSO administrative units): v2 = current units, v1 = pre-2025 units.
 //   node scripts/build-vn-address.mjs
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const SRC_NEW = "https://provinces.open-api.vn/api/v2/?depth=2";
-const SRC = "https://provinces.open-api.vn/api/v1/?depth=2";
+const SRC = "https://provinces.open-api.vn/api/v1/?depth=3";
 
 // New province → the old provinces it was formed from (Resolution 202/2025/QH15)
 const MERGED = {
@@ -68,7 +69,7 @@ for (const [prov, olds] of Object.entries(MERGED)) {
     const q = oldByName.get(o);
     if (!q) throw new Error("Missing old province " + o);
     used.add(o);
-    return q.districts.map((x) => [x.name, olds.length > 1 ? o : ""]);
+    return q.districts.map((x) => [x.name, olds.length > 1 ? o : "", x.wards.map((y) => y.name)]);
   });
   // A–Z (Vietnamese order) so a long list is easy to scan
   const w = p.wards.map((x) => x.name).sort(new Intl.Collator("vi").compare);

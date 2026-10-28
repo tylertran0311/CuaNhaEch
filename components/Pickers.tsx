@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type { Dict } from "@/lib/i18n";
-import { fold } from "@/lib/address";
+import { fold, unitKey } from "@/lib/address";
 import { isoDate } from "@/lib/store";
 
 /** Closes a popup on outside click or Escape */
@@ -19,15 +19,21 @@ function useDismiss(open: boolean, close: () => void, ref: React.RefObject<HTMLE
   }, [open, ref]);
 }
 
-export interface Opt { value: string; hint?: string }
+/** A suggestion; `alias` lists other ways people write it, "|"-separated and accent-free (e.g. "hcm|sai gon") */
+export interface Opt { value: string; hint?: string; alias?: string }
+
+const plain = (s: string) => fold(s).replace(/\./g, " ").replace(/\s+/g, " ").trim();
+const aliasOf = (o: Opt, s: string) => !!o.alias && o.alias.split("|").includes(plain(s));
 
 /**
  * Text field with a searchable suggestion list. Typing anything is allowed (values not in the list are kept),
  * so it works both as a picker (province, district, ward) and as autocomplete (customer names).
+ * With `snap`, a typed short form that names exactly one option ("p.tân sơn", "q.1", "hcm") becomes that option
+ * when the field is left.
  */
-export function Combobox({ value, onChange, onPick, options, placeholder, className = "", bad, noMatch, inputProps }: {
+export function Combobox({ value, onChange, onPick, options, placeholder, className = "", bad, noMatch, inputProps, snap }: {
   value: string; onChange: (v: string) => void; onPick?: (o: Opt) => void; options: Opt[]; placeholder: string;
-  className?: string; bad?: boolean; noMatch?: string; inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
+  className?: string; bad?: boolean; noMatch?: string; inputProps?: React.InputHTMLAttributes<HTMLInputElement>; snap?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   // What the user typed since opening; "" lists everything
@@ -38,10 +44,21 @@ export function Combobox({ value, onChange, onPick, options, placeholder, classN
   useDismiss(open, () => setOpen(false), box);
 
   const shown = useMemo(() => {
-    const q = fold(query.trim());
-    const hits = q ? options.filter((o) => fold(o.value + " " + (o.hint || "")).includes(q)) : options;
-    return hits.slice(0, 400);
+    const q = fold(query.trim()), uk = unitKey(query);
+    if (!q) return options.slice(0, 400);
+    // Matches the text, a short form ("q.1" → Quận 1…) or an alias; exact short-form matches come first
+    const hits = options.filter((o) => fold(o.value + " " + (o.hint || "")).includes(q)
+      || (uk && unitKey(o.value).includes(uk)) || aliasOf(o, query));
+    const exact = (o: Opt) => (unitKey(o.value) === uk || aliasOf(o, query) ? 0 : 1);
+    return hits.sort((a, b) => exact(a) - exact(b)).slice(0, 400);
   }, [options, query]);
+
+  function snapTo() {
+    if (!snap || !value.trim() || options.some((o) => o.value === value)) return;
+    const uk = unitKey(value);
+    const hits = options.filter((o) => (uk && unitKey(o.value) === uk) || aliasOf(o, value));
+    if (hits.length === 1) { onChange(hits[0].value); onPick?.(hits[0]); }
+  }
 
   useEffect(() => { list.current?.children[act]?.scrollIntoView({ block: "nearest" }); }, [act]);
 
@@ -71,7 +88,7 @@ export function Combobox({ value, onChange, onPick, options, placeholder, classN
         onFocus={() => { focusedAt.current = Date.now(); show(); }}
         onClick={() => { if (Date.now() - focusedAt.current > 300) toggle(); }}
         onChange={(e) => { onChange(e.target.value); setQuery(e.target.value); setAct(0); setOpen(true); }}
-        onKeyDown={key} />
+        onKeyDown={key} onBlur={snapTo} />
       <button type="button" className="dd-tog" tabIndex={-1} aria-label={placeholder}
         onPointerDown={(e) => e.preventDefault()} onClick={() => { box.current?.querySelector("input")?.focus(); toggle(); }}>
         <Chevron />

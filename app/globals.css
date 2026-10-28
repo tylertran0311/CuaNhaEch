@@ -362,3 +362,25 @@ html,.cb-list{scrollbar-width:thin;scrollbar-color:var(--pk) transparent}
   .cb-list::-webkit-scrollbar{width:12px}
   .cb-list::-webkit-scrollbar-track{margin:8px 0}
 }
+/* Quick entry: paste the customer's reply to fill the form */
+.fhead-acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.fhead-acts .ghost.on{background:var(--sun)}
+.quick{flex:1 1 100%;display:flex;flex-direction:column;gap:8px;background:var(--tint);border:2px dashed var(--ink);border-radius:14px;padding:12px;animation:popin .18s ease-out}
+.quick p{margin:0;font-size:14px;color:var(--mut)}
+.quick textarea{width:100%;font:inherit;color:var(--ink);background:var(--wh);border:2px solid var(--ink);border-radius:12px;padding:10px 12px;resize:vertical;min-height:150px;line-height:1.5}
+.quick textarea:focus{outline:3px solid var(--pk);outline-offset:2px;box-shadow:0 0 0 4px var(--pk2)}
+.quick-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.quick-acts .btn{padding:5px 20px;font-size:15px}
+.quick-acts .btn:disabled{opacity:.5;cursor:default;transform:none}
+.qmsg{flex:1 1 100%;font-size:14px;font-weight:700;color:var(--grn);background:#e6f8f3;border:2px solid var(--grn);border-radius:12px;padding:6px 12px}
+@media(max-width:600px){
+  .fhead{flex-wrap:wrap}
+  .quick-acts>*{flex:1 1 auto}
+  .quick textarea{min-height:170px;font-size:16px}
+}
+/* Copy buttons next to the phone and address on order cards */
+.cpy{display:inline-grid;place-items:center;width:26px;height:26px;margin-left:2px;vertical-align:-6px;padding:0;border:1.5px solid var(--ink);border-radius:8px;background:var(--wh);color:var(--ink);cursor:pointer;box-shadow:0 2px 0 var(--ink);font:800 13px var(--font-baloo),sans-serif;transition:background .15s,transform .1s,box-shadow .1s}
+.cpy:hover{background:var(--pk2)}
+.cpy:active{transform:translateY(2px);box-shadow:0 0 0 var(--ink)}
+.cpy.ok{background:var(--aq);color:var(--ink)}
+@media(max-width:600px){.cpy{width:32px;height:32px;vertical-align:-9px}}

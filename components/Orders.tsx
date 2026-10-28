@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Money, useErrors, type ViewProps } from "./ui";
+import { CopyBtn, Money, useErrors, type ViewProps } from "./ui";
 import { Combobox, DatePicker, Select, TimePicker } from "./Pickers";
 import type { Dict } from "@/lib/i18n";
 import { formatVN, isVNPhone } from "@/lib/phone";
-import { EMPTY_ADDR, PROVINCES, composeAddr, fold, loadGeo, type Address, type Geo } from "@/lib/address";
+import { QUICK_TEMPLATE, parseAddress, parseDate, parseTime, splitReply } from "@/lib/quick";
+import { CITY_ALIAS, EMPTY_ADDR, PROVINCES, capWords, composeAddr, fold, loadGeo, unitKey, type Address, type Geo } from "@/lib/address";
 import { CH, DEPOSITED, IC, KINDS, PAID, SHIPPED, addrOf, byWhen, day, deposit, dueAfterDeposit, isoDate, moveTo, newId, steamFeeFor, stillDue, fd, fdw, kl, short, vnd, type Kind, type Line, type Order, type State, type Unit } from "@/lib/store";
 
 // When editing, a line starts on its saved snapshot (pid === OLD) so the order keeps the price it was placed at
@@ -172,9 +173,11 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
     loadGeo(ad.city).then((g) => { if (alive) setGeo(g); });
     return () => { alive = false; };
   }, [ad.city]);
-  const cityOpts = useMemo(() => PROVINCES.map((p) => ({ value: p })), []);
-  const distOpts = useMemo(() => (geo?.d || []).map(([d, o]) => ({ value: d, hint: o ? `${o} ${t.oldUnit}` : t.oldUnit })), [geo, t]);
-  const wardOpts = useMemo(() => (geo?.w || []).map((w) => ({ value: w })), [geo]);
+  const cityOpts = useMemo(() => PROVINCES.map((p) => ({ value: p, alias: CITY_ALIAS[p] })), []);
+  const distOpts = useMemo(() => (geo?.d || []).map(([d, o]) => ({ value: d, hint: o || undefined })), [geo]);
+  // With a district picked: its wards. Otherwise the province's current wards (addresses in the new two-level form)
+  const distWards = geo?.d.find(([d]) => unitKey(d) === unitKey(ad.dist))?.[2];
+  const wardOpts = useMemo(() => (ad.dist.trim() ? distWards || [] : geo?.w || []).map((w) => ({ value: w })), [geo, distWards, ad.dist]);
 
   // Past customers, newest order first, with the phone and address they last used
   const custs = useMemo(() => {
@@ -183,6 +186,50 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
     return m;
   }, [s.orders]);
   const custOpts = useMemo(() => [...custs.values()].map((o) => ({ value: o.name, hint: o.phone || t.pastCust })), [custs, t]);
+  // Quick entry: paste the customer's reply to the template and fill the form from it
+  const [qOpen, setQOpen] = useState(false);
+  const [qText, setQText] = useState("");
+  const [qMsg, setQMsg] = useState("");
+  const [copied, setCopied] = useState(false);
+  const qRef = useRef<HTMLTextAreaElement>(null);
+  async function applyQuick() {
+    const r = splitReply(qText);
+    const done: string[] = [], warn: string[] = [], unread: string[] = [];
+    if (r.name) { setName(r.name); done.push(t.name); }
+    if (r.phone) {
+      const p = formatVN(r.phone);
+      setPhone(p);
+      done.push(t.phone);
+      if (!isVNPhone(p)) warn.push(t.quickBadPhone);
+    }
+    if (r.addr) {
+      // Load the province's ward list first, so the ward is written exactly as in the list
+      const city = parseAddress(r.addr).city;
+      const g = city ? await loadGeo(city) : null;
+      setAd(parseAddress(r.addr, () => g));
+      done.push(t.addr);
+    }
+    // A date or time that can't be read is kept in the note instead of being lost
+    if (r.date) { const d = parseDate(r.date); if (d) { setDDate(d); done.push(t.dDate); } else unread.push(`${t.dDate}: ${r.date}`); }
+    if (r.time) { const x = parseTime(r.time); if (x) { setDTime(x); done.push(t.dTime); } else unread.push(`${t.dTime}: ${r.time}`); }
+    const n = [r.note, ...unread].filter(Boolean).join("\n");
+    if (n) { setNote(n); setNoteOpen(true); if (r.note) done.push(t.qNote); }
+    if (unread.length) warn.push(t.quickRaw);
+    setQMsg(done.length ? t.quickDone + done.join(", ") + (warn.length ? " · ⚠ " + warn.join(" · ") : "") : t.quickNone);
+    if (done.length) { setQOpen(false); setQText(""); }
+  }
+  async function copyTemplate() {
+    try {
+      await navigator.clipboard.writeText(QUICK_TEMPLATE);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // Clipboard blocked: put the template in the box, selected, so it can be copied by hand
+      setQText(QUICK_TEMPLATE);
+      setTimeout(() => qRef.current?.select(), 0);
+    }
+  }
+
   function pickCustomer(o: { value: string }) {
     const c = custs.get(fold(o.value.trim()));
     if (!c) return;
@@ -245,7 +292,7 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
   }
 
   function resetForm() {
-    setEditId(null); setName(""); setCh(CH[0]); setPhone(""); setAd(EMPTY_ADDR); setDDate(day(0)); setDTime(thisHour()); setSteam(false); setLive(false); setNote(""); setNoteOpen(false); setLines([newLine(s)]); setAmt(""); setShip(""); clear();
+    setEditId(null); setName(""); setCh(CH[0]); setPhone(""); setAd(EMPTY_ADDR); setDDate(day(0)); setDTime(thisHour()); setSteam(false); setLive(false); setNote(""); setNoteOpen(false); setQMsg(""); setLines([newLine(s)]); setAmt(""); setShip(""); clear();
   }
 
   function showForm(v: boolean) {
@@ -344,26 +391,46 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
       <form ref={formRef} className={`add${editing ? " editing" : ""}`} onSubmit={submit}>
         <div className="fhead">
           {editing ? <div className="edh">✎ {t.editing}<b>{editing.name}</b></div> : <b>📝 {t.newOrder}</b>}
-          {!editing && <button type="button" className="ghost" onClick={() => showForm(false)}>{t.fold}</button>}
+          <div className="fhead-acts">
+            <button type="button" className={`ghost${qOpen ? " on" : ""}`} aria-expanded={qOpen}
+              onClick={() => { setQOpen(!qOpen); setQMsg(""); }}>{t.quick}</button>
+            {!editing && <button type="button" className="ghost" onClick={() => showForm(false)}>{t.fold}</button>}
+          </div>
         </div>
+        {qOpen && (
+          <div className="quick">
+            <p>{t.quickHint}</p>
+            <textarea ref={qRef} rows={7} value={qText} autoFocus placeholder={QUICK_TEMPLATE} onChange={(e) => setQText(e.target.value)} />
+            <div className="quick-acts">
+              <button type="button" className="btn" disabled={!qText.trim()} onClick={applyQuick}>{t.quickFill}</button>
+              <button type="button" className="ghost" onClick={copyTemplate}>{copied ? t.quickCopied : t.quickCopy}</button>
+              <button type="button" className="ghost" onClick={() => setQOpen(false)}>{t.quickClose}</button>
+            </div>
+          </div>
+        )}
+        {qMsg && <div className="qmsg" role="status">{qMsg}</div>}
         <Select className="a-ch" value={ch} onChange={setCh} options={CH} label={t.chLbl} />
         <Combobox className="a-name" bad={bad.n} placeholder={t.name} value={name} onChange={setName} options={custOpts} onPick={pickCustomer} />
         <input className={bad.ph ? "bad" : ""} type="tel" inputMode="tel" autoComplete="off" placeholder={t.phone}
           value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={() => setPhone(formatVN(phone))} />
         <fieldset className="adr">
           <legend>📍 {t.addr}</legend>
-          {([["no", t.adNo], ["street", t.adStreet]] as const).map(([k, ph]) => (
-            <input key={k} className={`a-${k}`} autoComplete="off" placeholder={ph} value={ad[k]}
-              onChange={(e) => setAd((a) => ({ ...a, [k]: e.target.value }))} />
-          ))}
-          {/* Province → its current wards; the old district is optional. Anything can still be typed by hand */}
-          <Combobox className="a-city" placeholder={t.adCity} value={ad.city} options={cityOpts} noMatch={t.noMatch}
+          <input className="a-no" autoComplete="off" placeholder={t.adNo} value={ad.no}
+            onChange={(e) => setAd((a) => ({ ...a, no: e.target.value }))} />
+          {/* Street names are proper names: capitalised when the field is left */}
+          <input className="a-street" autoComplete="off" placeholder={t.adStreet} value={ad.street}
+            onChange={(e) => setAd((a) => ({ ...a, street: e.target.value }))}
+            onBlur={() => setAd((a) => ({ ...a, street: capWords(a.street) }))} />
+          {/* Province → its districts → that district's wards. Short forms ("q.1", "p.tân sơn") snap to the list;
+              anything else can still be typed by hand */}
+          <Combobox className="a-city" placeholder={t.adCity} value={ad.city} options={cityOpts} noMatch={t.noMatch} snap
             onChange={(v) => setAd((a) => ({ ...a, city: v }))}
             onPick={(o) => { if (o.value !== ad.city) setAd((a) => ({ ...a, city: o.value, dist: "", ward: "" })); }} />
-          <Combobox className="a-ward" placeholder={t.adWard} value={ad.ward} options={wardOpts} noMatch={t.noMatch}
+          <Combobox className="a-dist" placeholder={t.adDist} value={ad.dist} options={distOpts} noMatch={t.noMatch} snap
+            onChange={(v) => setAd((a) => ({ ...a, dist: v }))}
+            onPick={(o) => { if (o.value !== ad.dist) setAd((a) => ({ ...a, dist: o.value, ward: "" })); }} />
+          <Combobox className="a-ward" placeholder={t.adWard} value={ad.ward} options={wardOpts} noMatch={t.noMatch} snap
             onChange={(v) => setAd((a) => ({ ...a, ward: v }))} />
-          <Combobox className="a-dist" placeholder={t.adDist} value={ad.dist} options={distOpts} noMatch={t.noMatch}
-            onChange={(v) => setAd((a) => ({ ...a, dist: v }))} />
         </fieldset>
         <DatePicker className="dt" label={t.dDate} value={dDate} onChange={setDDate} t={t} clearable />
         <TimePicker className="dt" label={t.dTime} value={dTime} onChange={setDTime} t={t} />
@@ -437,8 +504,8 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
                 <div className={`card${o.id === popId ? " pop" : ""}${o.id === editId ? " editing" : ""}`} data-id={o.id} key={o.id}>
                   <span className="grip" aria-hidden="true">⠿</span>
                   <span className="ch">{o.ch}</span> <b>{o.name}</b>
-                  {o.phone && <div className="ci">📞 <a href={`tel:${o.phone.replace(/[^\d+]/g, "")}`}>{o.phone}</a></div>}
-                  {addrOf(o) && <div className="ci">📍 {addrOf(o)}</div>}
+                  {o.phone && <div className="ci">📞 <a href={`tel:${o.phone.replace(/[^\d+]/g, "")}`}>{o.phone}</a> <CopyBtn text={o.phone} label={t.copyPhone} /></div>}
+                  {addrOf(o) && <div className="ci">📍 {addrOf(o)} <CopyBtn text={addrOf(o)} label={t.copyAddr} /></div>}
                   {o.note && <div className="onote">📝 {o.note}</div>}
                   <When o={o} t={t} />
                   <ItemsList o={o} t={t} />

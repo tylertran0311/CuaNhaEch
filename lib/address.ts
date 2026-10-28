@@ -32,14 +32,29 @@ export function composeAddr(a: Address) {
 
 /** Lowercase without Vietnamese accents, for searching ("tan phong" finds "Phường Tân Phong") */
 export const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "d").toLowerCase();
+/**
+ * Name of a ward/district without its unit word, so abbreviations match the full name:
+ * "p.tân sơn" / "Phường Tân Sơn" → "tan son", "q.1" / "Q1" / "Quận 1" → "1"
+ */
+export const unitKey = (s: string) => fold(s).replace(/\./g, " ").replace(/\s+/g, " ").trim()
+  .replace(/^(phuong|xa|thi tran|dac khu|quan|huyen|thi xa|thanh pho|tp|tt|tx|p|x|q|h)(\s+|(?=\d))/, "").trim();
+
+/**
+ * Proper-name capitals: "lê lợi" → "Lê Lợi". Letter+number codes are all caps ("cmt8" → "CMT8", "ql1a" → "QL1A");
+ * the rest of each word is left as typed.
+ */
+export const capWords = (s: string) => s
+  .replace(/(^|[\s/(-])(\p{Ll})/gu, (_, a: string, b: string) => a + b.toUpperCase())
+  .replace(/(^|[\s/(-])([a-z]{1,4}\d+[a-z]?)(?=$|[\s,/)-])/giu, (_, a: string, b: string) => a + b.toUpperCase());
+
 /** File name for a province's data in public/vn (same rule as scripts/build-vn-address.mjs) */
 export const slugVN = (s: string) => fold(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 /**
- * A province's current wards/communes (w), plus its pre-2025 districts (d, with the old province they belonged to
- * when several merged). Wards hang directly off the province now, so the district is only an optional extra.
+ * A province's current wards/communes (w), plus its pre-2025 districts (d) with the old province they belonged to
+ * (when several merged) and their wards, for addresses still given the old way.
  */
-export interface Geo { w: string[]; d: [district: string, oldProvince: string][] }
+export interface Geo { w: string[]; d: [district: string, oldProvince: string, wards: string[]][] }
 const geoCache = new Map<string, Promise<Geo | null>>();
 
 /** Districts and wards for one of the 34 provinces; null for anything else (typed by hand) */
@@ -55,3 +70,13 @@ export function loadGeo(city: string): Promise<Geo | null> {
   }
   return q;
 }
+
+/** Short names customers use for provinces (accent-free, "|"-separated) */
+export const CITY_ALIAS: Record<string, string> = {
+  "TP. Hồ Chí Minh": "hcm|tp hcm|tphcm|ho chi minh|tp ho chi minh|sai gon|sg",
+  "Hà Nội": "hn|ha noi|tp ha noi",
+  "Đà Nẵng": "dn|da nang|tp da nang",
+  "Hải Phòng": "hp|hai phong|tp hai phong",
+  "Cần Thơ": "ct|can tho|tp can tho",
+  "Huế": "hue|tp hue|thua thien hue",
+};
