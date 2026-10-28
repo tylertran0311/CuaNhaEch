@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { ViewProps } from "./ui";
 import { OrderTags } from "./Orders";
 import type { Dict } from "@/lib/i18n";
-import { IC, PAID, SHIPPED, byWhen, day, fd, isoDate, kl, stillDue, vnd, type Order } from "@/lib/store";
+import { IC, PAID, SHIPPED, addrOf, byWhen, day, fd, isoDate, kl, stillDue, vnd, type Order } from "@/lib/store";
 
 function itemsText(o: Order, t: Dict) {
   if (o.lines && o.lines.length) return o.lines.map((l) => `${l.name} ${l.q}${l.u === "kg" ? "kg" : " " + t.piece}`).join(", ");
@@ -21,13 +21,14 @@ function Ev({ o, t, showDate }: { o: Order; t: Dict; showDate?: boolean }) {
       <div><span className="ch">{o.ch}</span> <b>{o.name}</b> <OrderTags o={o} t={t} /></div>
       <div className="m">{itemsText(o, t)}</div>
       {o.phone && <div className="m">📞 {o.phone}</div>}
-      {o.addr && <div className="m">📍 {o.addr}</div>}
+      {addrOf(o) && <div className="m">📍 {addrOf(o)}</div>}
+      {o.note && <div className="m onote">📝 {o.note}</div>}
       {o.stage < PAID && <div className="due">{t.due}: {vnd(stillDue(o))}</div>}
     </div>
   );
 }
 
-export default function CalendarView({ s, t }: ViewProps) {
+export default function CalendarView({ s, t, openDay }: ViewProps & { openDay: (d: string) => void }) {
   const [offset, setOffset] = useState(0);
   const today = day(0);
 
@@ -56,7 +57,7 @@ export default function CalendarView({ s, t }: ViewProps) {
           const list = inWeek.filter((o) => o.dDate === d);
           return (
             <div key={d} className={`day${d === today ? " today" : d < today ? " past" : ""}`}>
-              <h3>
+              <h3 title={t.dayOpen} onClick={() => openDay(d)}>
                 <span>{t.wd[(i + 1) % 7]} {fd(d)}{d === today && <> · {t.today}</>}</span>
                 <span className="n">{list.length}</span>
               </h3>

@@ -13,8 +13,16 @@ export const PROVINCES = [
   "Thái Nguyên", "Thanh Hóa", "Tuyên Quang", "Vĩnh Long",
 ];
 
-/** "12 Lê Lợi, Bến Thành, Quận 1, TP. Hồ Chí Minh" — empty parts are skipped */
+// Prefixes added when the part was typed without one, e.g. "75" → "đường 75", "Tân Phong" → "P.Tân Phong", "7" → "Q.7"
+const HAS_STREET = /^(đường|hẻm|ngõ|ngách|kiệt|quốc lộ|tỉnh lộ|đại lộ)(\s|$)|^(đ|ql|tl|dt)\./iu;
+const HAS_WARD = /^(phường|xã|thị trấn|đặc khu)(\s|$)|^(p|x|tt)\./iu;
+const HAS_DIST = /^(quận|huyện|thị xã|thành phố)(\s|$)|^(q|h|tx|tp)\./iu;
+const prefix = (v: string, has: RegExp, p: string) => (v && !has.test(v) ? p + v : v);
+
+/** "47 đường 75, P.Tân Phong, Q.7, TP. Hồ Chí Minh" — empty parts are skipped */
 export function composeAddr(a: Address) {
-  const p = { no: a.no.trim(), street: a.street.trim(), ward: a.ward.trim(), dist: a.dist.trim(), city: a.city.trim() };
-  return [[p.no, p.street].filter(Boolean).join(" "), p.ward, p.dist, p.city].filter(Boolean).join(", ");
+  const street = prefix(a.street.trim(), HAS_STREET, "đường ");
+  const ward = prefix(a.ward.trim(), HAS_WARD, "P.");
+  const dist = prefix(a.dist.trim(), HAS_DIST, "Q.");
+  return [[a.no.trim(), street].filter(Boolean).join(" "), ward, dist, a.city.trim()].filter(Boolean).join(", ");
 }

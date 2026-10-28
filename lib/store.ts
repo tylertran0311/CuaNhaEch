@@ -1,5 +1,5 @@
 import type { Dict, Lang } from "./i18n";
-import type { Address } from "./address";
+import { composeAddr, type Address } from "./address";
 
 export type Kind = "crab" | "shrimp";
 export type Unit = "kg" | "con";
@@ -14,6 +14,7 @@ export interface Order {
   dDate?: string; dTime?: string;
   // Steamed order, closed on a livestream, and the steaming fee charged (saved so old orders keep it)
   steam?: boolean; live?: boolean; steamFee?: number;
+  note?: string;
   lines?: Line[];
   // Deposit actually received and the day it came in (unset = not received yet)
   dep?: number; depDate?: string;
@@ -162,3 +163,6 @@ export function loadLang(): Lang {
 export function saveLang(l: Lang) {
   try { localStorage.setItem(LK, l); } catch {}
 }
+
+/** One-line delivery address, rebuilt from its parts when the order has them */
+export const addrOf = (o: Order) => (o.ad ? composeAddr(o.ad) : o.addr || "");

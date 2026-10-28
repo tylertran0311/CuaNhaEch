@@ -5,11 +5,12 @@ import { Money, useErrors, type ViewProps } from "./ui";
 import type { Dict } from "@/lib/i18n";
 import { formatVN, isVNPhone } from "@/lib/phone";
 import { EMPTY_ADDR, PROVINCES, composeAddr, type Address } from "@/lib/address";
-import { CH, DEPOSITED, IC, KINDS, PAID, SHIPPED, byWhen, day, deposit, dueAfterDeposit, moveTo, newId, steamFeeFor, stillDue, fd, fdw, kl, short, vnd, type Kind, type Line, type Order, type State, type Unit } from "@/lib/store";
+import { CH, DEPOSITED, IC, KINDS, PAID, SHIPPED, addrOf, byWhen, day, deposit, dueAfterDeposit, isoDate, moveTo, newId, steamFeeFor, stillDue, fd, fdw, kl, short, vnd, type Kind, type Line, type Order, type State, type Unit } from "@/lib/store";
 
 // When editing, a line starts on its saved snapshot (pid === OLD) so the order keeps the price it was placed at
 interface FormLine { key: number; pid: string; q: string; u: Unit; snap?: { k: Kind; name: string; price: number } }
 const OLD = "__old";
+const FORM_OPEN = "cne-form-open";
 
 let lineKey = 0;
 const newLine = (s: State): FormLine => {
@@ -31,29 +32,33 @@ function ItemsList({ o, t }: { o: Order; t: Dict }) {
   );
 }
 
-/** Steamed / closed-on-live badges */
+/** Steamed or raw, plus closed-on-live */
 export function OrderTags({ o, t }: { o: Order; t: Dict }) {
-  if (!o.steam && !o.live) return null;
   return (
     <span className="otags">
-      {o.steam && <span className="otag steam">🔥 {t.steam}</span>}
-      {o.live && <span className="otag live">📺 Live</span>}
+      {o.steam ? <span className="otag steam">🔥 {t.steam}</span> : <span className="otag raw">🦀 {t.raw}</span>}
+      {o.live && <span className="otag live">📺 {t.live}</span>}
     </span>
   );
 }
 
-/** Delivery day/time, flagged when it's today, tomorrow or overdue (until the order is shipped) */
+/** Delivery day/time with the order's tags; flagged when overdue (until the order is shipped) */
 function When({ o, t }: { o: Order; t: Dict }) {
-  if (!o.dDate && !o.dTime) return null;
-  const today = day(0);
-  const flag = !o.dDate || o.stage >= SHIPPED ? null
-    : o.dDate < today ? <span className="wn late">{t.late}</span>
-    : o.dDate === today ? <span className="wn now">{t.today}</span>
-    : o.dDate === day(-1) ? <span className="wn soon">{t.tomorrow}</span> : null;
+  const flag = o.dDate && o.stage < SHIPPED && o.dDate < day(0) ? <span className="wn late">{t.late}</span> : null;
   return (
-    <div className="ci">🗓 {t.deliver}: <b className="wt">{[o.dDate && fdw(t, o.dDate), o.dTime].filter(Boolean).join(" · ")}</b> {flag}</div>
+    <div className="ci">
+      {(o.dDate || o.dTime) && <>🗓 {t.deliver}: <b className="wt">{[o.dDate && fdw(t, o.dDate), o.dTime].filter(Boolean).join(" · ")}</b> {flag} </>}
+      <OrderTags o={o} t={t} />
+    </div>
   );
 }
+
+/** "" shows every order, "none" the ones without a delivery date, otherwise one delivery day (YYYY-MM-DD) */
+export type DayFilter = string;
+const shiftDay = (d: string, n: number) => isoDate(new Date(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8) + n));
+// New orders start on today at the current hour (minutes left at :00)
+const thisHour = () => String(new Date().getHours()).padStart(2, "0") + ":00";
+const inDay = (f: DayFilter, o: Order) => (f === "" ? true : f === "none" ? !o.dDate : o.dDate === f);
 
 /** Pointer-based drag between columns; works with mouse and with the ⠿ grip on touch. */
 function useBoardDrag(onDrop: (id: number, stage: number) => void) {
@@ -119,15 +124,19 @@ function useBoardDrag(onDrop: (id: number, stage: number) => void) {
   }, []);
 }
 
-export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: () => void }) {
+export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewProps & { goMenu: () => void; focus: DayFilter; setFocus: (f: DayFilter) => void }) {
   const [name, setName] = useState("");
   const [ch, setCh] = useState(CH[0]);
   const [phone, setPhone] = useState("");
   const [ad, setAd] = useState<Address>(EMPTY_ADDR);
-  const [dDate, setDDate] = useState("");
-  const [dTime, setDTime] = useState("");
+  const [dDate, setDDate] = useState(() => day(0));
+  const [dTime, setDTime] = useState(thisHour);
   const [steam, setSteam] = useState(false);
   const [live, setLive] = useState(false);
+  const [note, setNote] = useState("");
+  const [noteOpen, setNoteOpen] = useState(false);
+  // The form can be folded away to leave more room for the board; remembered on this device
+  const [open, setOpen] = useState(() => { try { return localStorage.getItem(FORM_OPEN) !== "0"; } catch { return true; } });
   const [lines, setLines] = useState<FormLine[]>(() => [newLine(s)]);
   const [amt, setAmt] = useState("");
   const [ship, setShip] = useState("");
@@ -195,7 +204,12 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
   }
 
   function resetForm() {
-    setEditId(null); setName(""); setCh(CH[0]); setPhone(""); setAd(EMPTY_ADDR); setDDate(""); setDTime(""); setSteam(false); setLive(false); setLines([newLine(s)]); setAmt(""); setShip(""); clear();
+    setEditId(null); setName(""); setCh(CH[0]); setPhone(""); setAd(EMPTY_ADDR); setDDate(day(0)); setDTime(thisHour()); setSteam(false); setLive(false); setNote(""); setNoteOpen(false); setLines([newLine(s)]); setAmt(""); setShip(""); clear();
+  }
+
+  function showForm(v: boolean) {
+    setOpen(v);
+    try { localStorage.setItem(FORM_OPEN, v ? "1" : "0"); } catch {}
   }
 
   function startEdit(o: Order) {
@@ -209,16 +223,20 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
     setDTime(o.dTime || "");
     setSteam(!!o.steam);
     setLive(!!o.live);
+    setNote(o.note || "");
+    setNoteOpen(!!o.note);
+    showForm(true);
     setLines((o.lines || []).map((l) => ({ key: ++lineKey, pid: OLD, q: String(l.q), u: l.u, snap: { k: l.k, name: l.name, price: l.price } })));
     setAmt(String(o.amt / 1000));
     setShip(o.ship ? String(o.ship / 1000) : "");
     clear();
-    formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    // Wait a frame so a folded form has opened before scrolling to it
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
   }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    const n = name.trim(), contact = { phone: formatVN(phone), addr: composeAddr(ad), ad: { ...ad }, dDate, dTime, steam, live, steamFee: feeNum };
+    const n = name.trim(), contact = { phone: formatVN(phone), addr: composeAddr(ad), ad: { ...ad }, dDate, dTime, steam, live, steamFee: feeNum, note: note.trim() || undefined };
     const ok = check(t, [
       { key: "n", ok: !!n, label: t.name },
       { key: "ph", ok: !contact.phone || isVNPhone(contact.phone), label: t.phone, msg: t.phoneBad },
@@ -247,8 +265,15 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
       });
       setPopId(id);
     }
+    // Keep the saved order in view when it's for a different delivery day than the one shown
+    if (!inDay(focus, { dDate } as Order)) setFocus(dDate || "none");
     resetForm();
   }
+
+  const shown = s.orders.filter((o) => inDay(focus, o));
+  const noDate = s.orders.filter((o) => !o.dDate).length;
+  // The day the arrows and date picker step from when showing all or undated orders
+  const dayOf = focus === "" || focus === "none" ? day(0) : focus;
 
   function delOrder(id: number) {
     if (id === editId) resetForm();
@@ -265,8 +290,16 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
         </div>
       )}
 
+      {!open ? (
+        <button type="button" className="add fold" onClick={() => showForm(true)}>
+          <b>📝 {t.newOrder}</b><span className="ghost">{t.unfold}</span>
+        </button>
+      ) : <>
       <form ref={formRef} className={`add${editing ? " editing" : ""}`} onSubmit={submit}>
-        {editing && <div className="edh">✎ {t.editing}<b>{editing.name}</b></div>}
+        <div className="fhead">
+          {editing ? <div className="edh">✎ {t.editing}<b>{editing.name}</b></div> : <b>📝 {t.newOrder}</b>}
+          {!editing && <button type="button" className="ghost" onClick={() => showForm(false)}>{t.fold}</button>}
+        </div>
         <select value={ch} onChange={(e) => setCh(e.target.value)}>
           {CH.map((c) => <option key={c}>{c}</option>)}
         </select>
@@ -315,6 +348,13 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
           ))}
         </div>
         <button type="button" className="ghost al" onClick={() => changeLines((ls) => [...ls, newLine(s)])}>+ {t.addLine}</button>
+        {!noteOpen && <button type="button" className="ghost al" onClick={() => setNoteOpen(true)}>{t.addNote}</button>}
+        {noteOpen && (
+          <div className="notef">
+            <textarea rows={2} placeholder={t.note} value={note} autoFocus={!note} onChange={(e) => setNote(e.target.value)} />
+            <button type="button" className="ghost" onClick={() => { setNote(""); setNoteOpen(false); }}>{t.noteRm}</button>
+          </div>
+        )}
         <Money value={amtShown} onChange={setAmt} placeholder={t.total} bad={bad.a} />
         <Money value={ship} onChange={setShip} placeholder={t.ship} />
         <button className="btn" type="submit">{editing ? t.saveEdit : t.add}</button>
@@ -325,10 +365,21 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
         {amtNum > 0 && <>{any && <br />}{t.dep}: {vnd(deposit(amtNum))} · {t.due}: {vnd(dueAfterDeposit(amtNum, shipNum, feeNum))}</>}
       </div>
       <div className="err" role="alert">{err}</div>
+      </>}
+
+      <div className="calbar daybar">
+        <h2>🗓 {focus === "" ? t.dayAllT : focus === "none" ? t.dayNone : `${t.dayOrders} ${fdw(t, focus)}`} <small>· {shown.length} {t.ords}</small></h2>
+        <button className="ghost" aria-label={t.dayPrev} title={t.dayPrev} onClick={() => setFocus(shiftDay(dayOf, -1))}>←</button>
+        <input type="date" value={dayOf} onChange={(e) => e.target.value && setFocus(e.target.value)} />
+        <button className="ghost" aria-label={t.dayNext} title={t.dayNext} onClick={() => setFocus(shiftDay(dayOf, 1))}>→</button>
+        <button className={`ghost${focus === day(0) ? " on" : ""}`} onClick={() => setFocus(day(0))}>{t.today}</button>
+        <button className={`ghost${focus === "none" ? " on" : ""}`} onClick={() => setFocus("none")}>{t.dayNone} ({noDate})</button>
+        <button className={`ghost${focus === "" ? " on" : ""}`} onClick={() => setFocus("")}>{t.dayAll}</button>
+      </div>
 
       <div className="board">
         {t.st.map((st, k) => {
-          const list = s.orders.filter((o) => o.stage === k).sort(byWhen);
+          const list = shown.filter((o) => o.stage === k).sort(byWhen);
           return (
             <div className="col" data-stage={k} key={k}>
               <h3><b>{IC[k]} {st}</b><span className="n">{list.length}</span></h3>
@@ -336,9 +387,9 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
                 <div className={`card${o.id === popId ? " pop" : ""}${o.id === editId ? " editing" : ""}`} data-id={o.id} key={o.id}>
                   <span className="grip" aria-hidden="true">⠿</span>
                   <span className="ch">{o.ch}</span> <b>{o.name}</b>
-                  <OrderTags o={o} t={t} />
                   {o.phone && <div className="ci">📞 <a href={`tel:${o.phone.replace(/[^\d+]/g, "")}`}>{o.phone}</a></div>}
-                  {o.addr && <div className="ci">📍 {o.addr}</div>}
+                  {addrOf(o) && <div className="ci">📍 {addrOf(o)}</div>}
+                  {o.note && <div className="onote">📝 {o.note}</div>}
                   <When o={o} t={t} />
                   <ItemsList o={o} t={t} />
                   <div className="m">{vnd(o.amt)}{o.steamFee ? ` + ${t.steamw} ${vnd(o.steamFee)}` : ""} + {t.shipw} {vnd(o.ship)}</div>
