@@ -11,6 +11,7 @@ import CalendarView from "./CalendarView";
 import MoneyView from "./MoneyView";
 import Customers from "./Customers";
 import Login from "./Login";
+import Loader from "./Loader";
 import type { Update } from "./ui";
 import { LANGS, T, type Lang } from "@/lib/i18n";
 import { day, load, loadLang, loadLocalRaw, save, saveLang, type State } from "@/lib/store";
@@ -133,6 +134,7 @@ export default function Dashboard() {
   return (
     <>
       <Background />
+      <Loader text={t.loading} done={!!s || needLogin || denied || !!loadErr} />
       <div className="wrap">
         <div className="top">
           <div className="brand">
@@ -162,7 +164,6 @@ export default function Dashboard() {
         {loadErr && (
           <div className="note">{t.loadErr}{loadErr}<button className="ghost" onClick={() => location.reload()}>{t.reload}</button></div>
         )}
-        {supabase && session && !s && !denied && !loadErr && <p className="sub">{t.loading}</p>}
 
         {s && (
           <>

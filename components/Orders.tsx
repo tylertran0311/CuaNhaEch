@@ -137,6 +137,13 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
   const [noteOpen, setNoteOpen] = useState(false);
   // The form can be folded away to leave more room for the board; remembered on this device
   const [open, setOpen] = useState(() => { try { return localStorage.getItem(FORM_OPEN) !== "0"; } catch { return true; } });
+  // While the height animates the content is clipped; once it settles it stops clipping so focus rings and shadows show
+  const [settled, setSettled] = useState(open);
+  useEffect(() => {
+    setSettled(false);
+    const id = setTimeout(() => setSettled(true), 420);
+    return () => clearTimeout(id);
+  }, [open]);
   const [lines, setLines] = useState<FormLine[]>(() => [newLine(s)]);
   const [amt, setAmt] = useState("");
   const [ship, setShip] = useState("");
@@ -290,11 +297,16 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
         </div>
       )}
 
-      {!open ? (
-        <button type="button" className="add fold" onClick={() => showForm(true)}>
-          <b>📝 {t.newOrder}</b><span className="ghost">{t.unfold}</span>
-        </button>
-      ) : <>
+      {/* The folded bar and the form swap with a height animation; both stay mounted so it can run both ways */}
+      <div className={`fold${open ? "" : " on"}${!open && settled ? " done" : ""}`} inert={open}>
+        <div>
+          <button type="button" className="add foldbar" onClick={() => showForm(true)}>
+            <b>📝 {t.newOrder}</b><span className="ghost">{t.unfold}</span>
+          </button>
+        </div>
+      </div>
+      <div className={`fold${open ? " on" : ""}${open && settled ? " done" : ""}`} inert={!open}>
+      <div>
       <form ref={formRef} className={`add${editing ? " editing" : ""}`} onSubmit={submit}>
         <div className="fhead">
           {editing ? <div className="edh">✎ {t.editing}<b>{editing.name}</b></div> : <b>📝 {t.newOrder}</b>}
@@ -336,23 +348,30 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
                   </optgroup>
                 ))}
               </select>
-              <input className={`lq${bad.lines ? " bad" : ""}`} type="number" min="0" step="any" inputMode="decimal"
-                placeholder={t.qty} value={l.q} onChange={(e) => setLine(l.key, { q: e.target.value })} />
-              <select className="lu" value={l.u} onChange={(e) => setLine(l.key, { u: e.target.value as Unit })}>
-                <option value="kg">kg</option>
-                <option value="con">{t.piece}</option>
-              </select>
-              <button type="button" className="ghost x" aria-label={t.rm}
-                onClick={() => changeLines((ls) => ls.filter((x) => x.key !== l.key))}>×</button>
+              <label className={`u lq${bad.lines ? " bad" : ""}`}>
+                <input type="number" min="0" step="any" inputMode="decimal"
+                  placeholder={t.qty} value={l.q} onChange={(e) => setLine(l.key, { q: e.target.value })} />
+                {/* Quantities are always in kg; older lines entered per piece keep their unit */}
+                <span>{l.u === "kg" ? "kg" : t.piece}</span>
+              </label>
+              <button type="button" className="lx" aria-label={t.rm} title={t.rm}
+                onClick={() => changeLines((ls) => ls.filter((x) => x.key !== l.key))}>
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+                </svg>
+              </button>
             </div>
           ))}
         </div>
-        <button type="button" className="ghost al" onClick={() => changeLines((ls) => [...ls, newLine(s)])}>+ {t.addLine}</button>
-        {!noteOpen && <button type="button" className="ghost al" onClick={() => setNoteOpen(true)}>{t.addNote}</button>}
+        <div className="fbtns">
+          <button type="button" className="ghost" onClick={() => changeLines((ls) => [...ls, newLine(s)])}>+ {t.addLine}</button>
+          {noteOpen
+            ? <button type="button" className="ghost" onClick={() => { setNote(""); setNoteOpen(false); }}>✕ {t.noteRm}</button>
+            : <button type="button" className="ghost" onClick={() => setNoteOpen(true)}>{t.addNote}</button>}
+        </div>
         {noteOpen && (
           <div className="notef">
             <textarea rows={2} placeholder={t.note} value={note} autoFocus={!note} onChange={(e) => setNote(e.target.value)} />
-            <button type="button" className="ghost" onClick={() => { setNote(""); setNoteOpen(false); }}>{t.noteRm}</button>
           </div>
         )}
         <Money value={amtShown} onChange={setAmt} placeholder={t.total} bad={bad.a} />
@@ -365,7 +384,8 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
         {amtNum > 0 && <>{any && <br />}{t.dep}: {vnd(deposit(amtNum))} · {t.due}: {vnd(dueAfterDeposit(amtNum, shipNum, feeNum))}</>}
       </div>
       <div className="err" role="alert">{err}</div>
-      </>}
+      </div>
+      </div>
 
       <div className="calbar daybar">
         <h2>🗓 {focus === "" ? t.dayAllT : focus === "none" ? t.dayNone : `${t.dayOrders} ${fdw(t, focus)}`} <small>· {shown.length} {t.ords}</small></h2>

@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 // Fonts load from Google at runtime (not next/font) so builds don't need to download them
-const FONTS = "https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@400;500;700&display=swap";
+const FONTS = "https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Paytone+One&family=VT323&family=Be+Vietnam+Pro:wght@400;500;700&display=swap";
 
 export const metadata: Metadata = {
   title: "Cua Nhà Ếch – Shop dashboard",
