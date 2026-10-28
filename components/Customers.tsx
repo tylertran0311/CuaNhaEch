@@ -1,7 +1,7 @@
 "use client";
 
 import type { ViewProps } from "./ui";
-import { day, vnd } from "@/lib/store";
+import { day, orderTotal, vnd } from "@/lib/store";
 
 interface Cust { name: string; n: number; sum: number; last: string; phone: string }
 
@@ -11,14 +11,14 @@ export default function Customers({ s, t }: ViewProps) {
     const k = o.name.toLowerCase();
     const c = m[k] || (m[k] = { name: o.name, n: 0, sum: 0, last: "", phone: "" });
     c.n++;
-    c.sum += o.amt;
+    c.sum += orderTotal(o);
     // Keep the phone number from the most recent order that has one
     if (o.phone && (!c.phone || o.date >= c.last)) c.phone = o.phone;
     if (o.date > c.last) c.last = o.date;
   });
   const A = Object.values(m).sort((a, b) => b.sum - a.sum);
   const rep = A.filter((c) => c.n > 1).length;
-  const tot = s.orders.reduce((a, o) => a + o.amt, 0);
+  const tot = s.orders.reduce((a, o) => a + orderTotal(o), 0);
   const ch: Record<string, number> = {};
   s.orders.forEach((o) => { ch[o.ch] = (ch[o.ch] || 0) + 1; });
   const today = new Date(day(0)).getTime();

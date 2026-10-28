@@ -174,3 +174,12 @@ body{font-size:17px}
 .login .add{margin:0}
 .bad-note{background:#ffd6e4}
 .ghost:disabled,.btn:disabled{opacity:.55;cursor:default}
+/* Steamed / live options */
+.add>.opts{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.opt{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--ink);border-radius:999px;padding:5px 14px;background:var(--wh);font-weight:700;cursor:pointer;box-shadow:0 2px 0 var(--ink);user-select:none}
+.opt input{width:16px;height:16px;accent-color:var(--pk);margin:0;flex:none}
+.opt.on{background:var(--pk2)}
+.optfee{font-weight:700;color:var(--red);font-size:14px}
+.otags{display:inline-flex;gap:4px;vertical-align:2px;margin-left:2px}
+.otag{font-size:11px;font-weight:800;border:1.5px solid var(--ink);border-radius:999px;padding:0 7px;white-space:nowrap}
+.otag.steam{background:#ffd0bd}.otag.live{background:#ffc9e0}

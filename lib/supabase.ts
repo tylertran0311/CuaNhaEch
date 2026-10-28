@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-// Set these in .env.local (local) and as GitHub repo variables (deploy). The anon/publishable key
+// Set these in .env.local (local) and in the Vercel project's Environment Variables (deploy). The anon/publishable key
 // is meant to be public: access is enforced by the row-level security rules in supabase/schema.sql.
 // Accept the project URL even if it was pasted with the REST path (…supabase.co/rest/v1/)
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/\/rest\/v1\/?$/, "").replace(/\/+$/, "");

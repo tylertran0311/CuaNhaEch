@@ -12,6 +12,8 @@ export interface Order {
   phone?: string; addr?: string; ad?: Address;
   // Delivery day (YYYY-MM-DD) and time (HH:MM)
   dDate?: string; dTime?: string;
+  // Steamed order, closed on a livestream, and the steaming fee charged (saved so old orders keep it)
+  steam?: boolean; live?: boolean; steamFee?: number;
   lines?: Line[];
   // Deposit actually received and the day it came in (unset = not received yet)
   dep?: number; depDate?: string;
@@ -52,11 +54,16 @@ export const DEP = 0.3;
 /** 30% deposit on the goods total (not shipping), rounded to the nearest 1,000 ₫ */
 export const deposit = (amt: number) => Math.round((amt * DEP) / 1000) * 1000;
 /** What is left to collect after the deposit: rest of the goods plus shipping */
-export const dueAfterDeposit = (amt: number, ship: number) => amt - deposit(amt) + ship;
+export const dueAfterDeposit = (amt: number, ship: number, fee = 0) => amt - deposit(amt) + fee + ship;
+/** Steaming is free when the order was closed on a livestream, otherwise +10,000 ₫ */
+export const STEAM_FEE = 10000;
+export const steamFeeFor = (steam: boolean, live: boolean) => (steam && !live ? STEAM_FEE : 0);
+/** What the shop earns from an order: goods plus steaming fee (shipping is passed on) */
+export const orderTotal = (o: Order) => o.amt + (o.steamFee || 0);
 /** Deposit counted as money in: only while the order hasn't reached Paid (after that the full total counts) */
 export const depIn = (o: Order) => (o.stage < PAID ? o.dep || 0 : 0);
-/** What the customer still owes, including shipping */
-export const stillDue = (o: Order) => (o.stage >= PAID ? 0 : o.amt + o.ship - (o.dep || 0));
+/** What the customer still owes, including steaming and shipping */
+export const stillDue = (o: Order) => (o.stage >= PAID ? 0 : orderTotal(o) + o.ship - (o.dep || 0));
 
 /** Move an order to a column; reaching the deposit column records the 30% deposit as received */
 export function moveTo(o: Order, stage: number) {

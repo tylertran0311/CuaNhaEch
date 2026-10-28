@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import Background from "./Background";
-// Static import so the logo URL picks up the GitHub Pages base path
 import logo from "@/public/logo.png";
 import Orders from "./Orders";
 import MenuView from "./MenuView";

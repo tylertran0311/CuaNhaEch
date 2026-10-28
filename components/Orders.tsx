@@ -5,7 +5,7 @@ import { Money, useErrors, type ViewProps } from "./ui";
 import type { Dict } from "@/lib/i18n";
 import { formatVN, isVNPhone } from "@/lib/phone";
 import { EMPTY_ADDR, PROVINCES, composeAddr, type Address } from "@/lib/address";
-import { CH, DEPOSITED, IC, KINDS, PAID, SHIPPED, byWhen, day, deposit, dueAfterDeposit, moveTo, newId, stillDue, fd, fdw, kl, short, vnd, type Kind, type Line, type Order, type State, type Unit } from "@/lib/store";
+import { CH, DEPOSITED, IC, KINDS, PAID, SHIPPED, byWhen, day, deposit, dueAfterDeposit, moveTo, newId, steamFeeFor, stillDue, fd, fdw, kl, short, vnd, type Kind, type Line, type Order, type State, type Unit } from "@/lib/store";
 
 // When editing, a line starts on its saved snapshot (pid === OLD) so the order keeps the price it was placed at
 interface FormLine { key: number; pid: string; q: string; u: Unit; snap?: { k: Kind; name: string; price: number } }
@@ -28,6 +28,17 @@ function ItemsList({ o, t }: { o: Order; t: Dict }) {
       {o.shrimp && <div><span className="tg shrimp">{kl(t, "shrimp")}</span> {o.shrimp}</div>}
       {o.item && !o.crab && !o.shrimp && <div>{o.item}</div>}
     </>
+  );
+}
+
+/** Steamed / closed-on-live badges */
+export function OrderTags({ o, t }: { o: Order; t: Dict }) {
+  if (!o.steam && !o.live) return null;
+  return (
+    <span className="otags">
+      {o.steam && <span className="otag steam">🔥 {t.steam}</span>}
+      {o.live && <span className="otag live">📺 Live</span>}
+    </span>
   );
 }
 
@@ -115,6 +126,8 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
   const [ad, setAd] = useState<Address>(EMPTY_ADDR);
   const [dDate, setDDate] = useState("");
   const [dTime, setDTime] = useState("");
+  const [steam, setSteam] = useState(false);
+  const [live, setLive] = useState(false);
   const [lines, setLines] = useState<FormLine[]>(() => [newLine(s)]);
   const [amt, setAmt] = useState("");
   const [ship, setShip] = useState("");
@@ -170,6 +183,7 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
   const amtShown = amt !== "" ? amt : any ? String(suggested) : "";
 
   const amtNum = Math.round(+amtShown * 1000), shipNum = Math.round((+ship || 0) * 1000);
+  const feeNum = steamFeeFor(steam, live);
 
   const setLine = (key: number, patch: Partial<FormLine>) =>
     changeLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...patch } : l)));
@@ -181,7 +195,7 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
   }
 
   function resetForm() {
-    setEditId(null); setName(""); setCh(CH[0]); setPhone(""); setAd(EMPTY_ADDR); setDDate(""); setDTime(""); setLines([newLine(s)]); setAmt(""); setShip(""); clear();
+    setEditId(null); setName(""); setCh(CH[0]); setPhone(""); setAd(EMPTY_ADDR); setDDate(""); setDTime(""); setSteam(false); setLive(false); setLines([newLine(s)]); setAmt(""); setShip(""); clear();
   }
 
   function startEdit(o: Order) {
@@ -193,6 +207,8 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
     setAd(o.ad ? { ...EMPTY_ADDR, ...o.ad } : { ...EMPTY_ADDR, street: o.addr || "" });
     setDDate(o.dDate || "");
     setDTime(o.dTime || "");
+    setSteam(!!o.steam);
+    setLive(!!o.live);
     setLines((o.lines || []).map((l) => ({ key: ++lineKey, pid: OLD, q: String(l.q), u: l.u, snap: { k: l.k, name: l.name, price: l.price } })));
     setAmt(String(o.amt / 1000));
     setShip(o.ship ? String(o.ship / 1000) : "");
@@ -202,7 +218,7 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    const n = name.trim(), contact = { phone: formatVN(phone), addr: composeAddr(ad), ad: { ...ad }, dDate, dTime };
+    const n = name.trim(), contact = { phone: formatVN(phone), addr: composeAddr(ad), ad: { ...ad }, dDate, dTime, steam, live, steamFee: feeNum };
     const ok = check(t, [
       { key: "n", ok: !!n, label: t.name },
       { key: "ph", ok: !contact.phone || isVNPhone(contact.phone), label: t.phone, msg: t.phoneBad },
@@ -268,6 +284,11 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
         </fieldset>
         <label className="u dt"><span>{t.dDate}</span><input type="date" value={dDate} onChange={(e) => setDDate(e.target.value)} /></label>
         <label className="u dt"><span>{t.dTime}</span><input type="time" value={dTime} onChange={(e) => setDTime(e.target.value)} /></label>
+        <div className="opts">
+          <label className={`opt${steam ? " on" : ""}`}><input type="checkbox" checked={steam} onChange={(e) => setSteam(e.target.checked)} /> 🔥 {t.steam}</label>
+          <label className={`opt${live ? " on" : ""}`}><input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} /> 📺 {t.live}</label>
+          {steam && <span className="optfee">{feeNum ? `${t.steamFee}: +${vnd(feeNum)}` : t.steamFree}</span>}
+        </div>
         <div className="lines">
           {legacy && <div className="sg">{t.oldItems}{legacy}</div>}
           {lines.map((l) => (
@@ -301,7 +322,7 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
       </form>
       <div className="sg">
         {any ? t.sugg + vnd(suggested * 1000) + (est ? t.suggEst : "") : ""}
-        {amtNum > 0 && <>{any && <br />}{t.dep}: {vnd(deposit(amtNum))} · {t.due}: {vnd(dueAfterDeposit(amtNum, shipNum))}</>}
+        {amtNum > 0 && <>{any && <br />}{t.dep}: {vnd(deposit(amtNum))} · {t.due}: {vnd(dueAfterDeposit(amtNum, shipNum, feeNum))}</>}
       </div>
       <div className="err" role="alert">{err}</div>
 
@@ -315,11 +336,12 @@ export default function Orders({ s, t, update, goMenu }: ViewProps & { goMenu: (
                 <div className={`card${o.id === popId ? " pop" : ""}${o.id === editId ? " editing" : ""}`} data-id={o.id} key={o.id}>
                   <span className="grip" aria-hidden="true">⠿</span>
                   <span className="ch">{o.ch}</span> <b>{o.name}</b>
+                  <OrderTags o={o} t={t} />
                   {o.phone && <div className="ci">📞 <a href={`tel:${o.phone.replace(/[^\d+]/g, "")}`}>{o.phone}</a></div>}
                   {o.addr && <div className="ci">📍 {o.addr}</div>}
                   <When o={o} t={t} />
                   <ItemsList o={o} t={t} />
-                  <div className="m">{vnd(o.amt)} + {t.shipw} {vnd(o.ship)}</div>
+                  <div className="m">{vnd(o.amt)}{o.steamFee ? ` + ${t.steamw} ${vnd(o.steamFee)}` : ""} + {t.shipw} {vnd(o.ship)}</div>
                   <div className="dep">
                     <div><span>{t.dep}</span><span>{vnd(deposit(o.amt))}</span></div>
                     <div><span>{t.due}</span><strong>{vnd(stillDue(o))}</strong></div>

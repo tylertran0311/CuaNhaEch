@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ViewProps } from "./ui";
+import { OrderTags } from "./Orders";
 import type { Dict } from "@/lib/i18n";
 import { IC, PAID, SHIPPED, byWhen, day, fd, isoDate, kl, stillDue, vnd, type Order } from "@/lib/store";
 
@@ -17,7 +18,7 @@ function Ev({ o, t, showDate }: { o: Order; t: Dict; showDate?: boolean }) {
         <span>{showDate && o.dDate ? fd(o.dDate) + " · " : ""}{o.dTime || t.noTime}</span>
         <span aria-label={t.st[o.stage]}>{IC[o.stage]}</span>
       </div>
-      <div><span className="ch">{o.ch}</span> <b>{o.name}</b></div>
+      <div><span className="ch">{o.ch}</span> <b>{o.name}</b> <OrderTags o={o} t={t} /></div>
       <div className="m">{itemsText(o, t)}</div>
       {o.phone && <div className="m">📞 {o.phone}</div>}
       {o.addr && <div className="m">📍 {o.addr}</div>}

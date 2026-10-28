@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Money, useErrors, type ViewProps } from "./ui";
-import { PAID, day, depIn, months, newId, short, vnd } from "@/lib/store";
+import { PAID, day, depIn, months, newId, orderTotal, short, vnd } from "@/lib/store";
 
 export default function MoneyView({ s, t, update }: ViewProps) {
   const [label, setLabel] = useState("");
@@ -12,12 +12,12 @@ export default function MoneyView({ s, t, update }: ViewProps) {
   const paid = s.orders.filter((o) => o.stage >= PAID), pend = s.orders.filter((o) => o.stage < PAID);
   // Deposits on unpaid orders count as money in on the day they were received
   const deps = pend.reduce((a, o) => a + depIn(o), 0);
-  const inn = paid.reduce((a, o) => a + o.amt, 0) + deps;
+  const inn = paid.reduce((a, o) => a + orderTotal(o), 0) + deps;
   const out = s.exp.reduce((a, e) => a + e.amt, 0);
-  const pn = pend.reduce((a, o) => a + o.amt - depIn(o), 0);
+  const pn = pend.reduce((a, o) => a + orderTotal(o) - depIn(o), 0);
   const ms = months();
   const mi = ms.map((m) =>
-    paid.filter((o) => o.date.slice(0, 7) === m).reduce((a, o) => a + o.amt, 0) +
+    paid.filter((o) => o.date.slice(0, 7) === m).reduce((a, o) => a + orderTotal(o), 0) +
     pend.filter((o) => (o.depDate || o.date).slice(0, 7) === m).reduce((a, o) => a + depIn(o), 0));
   const mo = ms.map((m) => s.exp.filter((e) => e.date.slice(0, 7) === m).reduce((a, e) => a + e.amt, 0));
   const mx = Math.max(...mi, ...mo, 1);
