@@ -1,0 +1,196 @@
+/*
+ * UI kit — styles for the shared components in components/ui. Feature stylesheets only add layout,
+ * never their own buttons, fields, chips or popups.
+ */
+
+/* ---------- Text ---------- */
+.sub{color:var(--mut);margin:0 0 18px}          /* muted paragraph under a title */
+.sg{color:var(--mut);font-size:13px;min-height:18px;margin:0 2px 4px}  /* small hint under a form */
+.err{color:var(--red);font-weight:700;min-height:22px;margin-bottom:10px}  /* <FormError> */
+.empty{color:var(--mut);padding:10px 0}.empty::before{content:"✧ "}      /* <Empty> */
+.sub.tight{margin:0 0 6px}
+.err.below{margin:8px 0 0}
+/* Spacing helpers for stacking blocks; prefer these over inline styles */
+.mt-12{margin-top:12px}.mt-20{margin-top:20px}
+
+/* ---------- Surfaces: <Panel>, <Stat>, form card ---------- */
+.panel,.stat,.add{background:var(--wh);border:var(--bd);border-radius:var(--r-xl);box-shadow:var(--lift-3)}
+.panel{padding:14px;margin-bottom:20px}
+.panel h2{margin:-14px -14px 12px;padding:6px 14px;background:linear-gradient(90deg,var(--pk2),var(--lil));border-bottom:var(--bd);border-radius:14px 14px 0 0;font:800 17px var(--font-baloo),sans-serif}
+.panel h2::before{content:"● ● ●";letter-spacing:2px;font-size:9px;margin-right:10px;vertical-align:2px}
+/* A form inside a panel drops its own card look */
+.panel .add{box-shadow:none;background:none;border:0;padding:0;margin:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.two{grid-template-columns:1fr}}
+
+/* <Stat> tiles: tinted in order */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:20px}
+.stat{padding:12px 14px;transition:transform .2s}.stat:hover{transform:translateY(-3px) rotate(-1deg)}
+.stat:nth-child(1){background:var(--sea)}.stat:nth-child(2){background:var(--blush)}.stat:nth-child(3){background:var(--lav)}.stat:nth-child(4){background:var(--butter)}
+.stat small{color:var(--mut);font-weight:700}.stat div{font:800 26px/1.2 var(--font-baloo),sans-serif}
+@media(min-width:700px){.stat div{font-size:30px}}
+
+/* <Note>: sticky-note banner; .bad-note for errors */
+.note{background:var(--sun);border:var(--bd-dash);border-radius:var(--r-lg);padding:8px 14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:14px;font-weight:500}
+.note::before{content:"✦";animation:tw 2s infinite}
+.bad-note{background:var(--red-note)}
+
+/* ---------- Form card (`.add`): fields wrap in rows, full width on phones ---------- */
+.add{display:flex;flex-wrap:wrap;gap:10px;padding:14px;margin-bottom:8px}
+@media(max-width:600px){.add>input,.add>select,.add>.btn{flex:1 1 100%}.add>.u{flex:1 1 calc(50% - 5px)}.add>.u:not(.dt){flex:1 1 100%}}
+
+/* ---------- Fields: <TextInput>, <TextArea>, <UnitInput> ---------- */
+input,select{font:inherit;color:var(--ink);background:var(--wh);border:var(--bd);border-radius:var(--r-md);padding:10px 12px;min-width:0;flex:1 1 130px;transition:box-shadow .15s}
+input:focus,select:focus{box-shadow:var(--ring)}
+textarea{font:inherit;color:var(--ink);background:var(--wh);border:var(--bd);border-radius:var(--r-md);padding:10px 12px;resize:vertical}
+textarea:focus{outline:var(--focus);outline-offset:2px;box-shadow:var(--ring)}
+/* Field with a fixed suffix (".000 ₫", "kg"): one focus ring on the whole field, not the inner input */
+.u{display:flex;align-items:center;flex:1 1 130px;background:var(--wh);border:var(--bd);border-radius:var(--r-md);padding-right:10px;min-width:0}
+.u:focus-within{box-shadow:var(--ring);outline:var(--focus);outline-offset:2px}
+.u input{border:0;flex:1 1 50px;background:none;box-shadow:none}
+.u input:focus-visible{outline:none}
+.u span{color:var(--mut);font-size:13px;white-space:nowrap;font-weight:700}
+.bad,.u.bad{border-color:var(--red)!important;background:var(--red-soft);animation:shake .35s}
+
+/* <ToggleChip>: checkbox drawn as a pill */
+.opt{display:inline-flex;align-items:center;gap:6px;border:var(--bd);border-radius:var(--r-pill);padding:5px 14px;background:var(--wh);font-weight:700;cursor:pointer;box-shadow:var(--drop-1);user-select:none}
+.opt input{width:16px;height:16px;accent-color:var(--pk);margin:0;flex:none}
+.opt.on{background:var(--pk2)}
+
+/* ---------- Buttons: <Button variant="primary|ghost|danger">, <IconButton> ---------- */
+.btn{background:linear-gradient(180deg,var(--primary-hi),var(--primary-lo));color:var(--white);border:var(--bd);border-radius:var(--r-pill);padding:7px 22px;font:800 16px var(--font-baloo),sans-serif;cursor:pointer;text-shadow:0 1px 0 rgba(59,47,92,.55);box-shadow:var(--drop-3),inset 0 2px 0 rgba(255,255,255,.65);transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 0 var(--ink),inset 0 2px 0 rgba(255,255,255,.65)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink),inset 0 2px 0 rgba(255,255,255,.65)}
+.btn.danger{background:linear-gradient(180deg,var(--danger-hi),var(--danger-lo))}
+@media(min-width:700px){.btn{font-size:17px;padding:9px 26px}}
+.ghost{background:var(--wh);border:var(--bd);color:var(--ink);border-radius:var(--r-pill);padding:3px 14px;font:700 14px var(--font-viet),sans-serif;cursor:pointer;box-shadow:var(--drop-1);transition:transform .12s,background .12s}
+.ghost:hover{background:var(--sun);transform:translateY(-1px)}
+.ghost.on{background:var(--sun)}
+.ghost:disabled,.btn:disabled{opacity:.55;cursor:default}
+/* Square icon button the height of a field (e.g. remove a line) */
+.lx{flex:0 0 auto;align-self:stretch;width:46px;display:grid;place-items:center;border:var(--bd);border-radius:var(--r-md);background:var(--wh);color:var(--red);cursor:pointer;box-shadow:var(--drop-2);transition:background .15s,color .15s,transform .12s,box-shadow .12s}
+.lx:hover{background:var(--red);color:var(--white)}
+.lx:active{transform:translateY(3px);box-shadow:0 0 0 var(--ink)}
+
+/* <Segmented>: a few options in one pill, the chosen one filled */
+.seg{display:flex;border:var(--bd);border-radius:var(--r-pill);overflow:hidden;background:var(--wh);box-shadow:var(--drop-2)}
+.seg button{border:0;background:none;padding:5px 14px;font:800 14px var(--font-baloo),sans-serif;color:var(--mut);cursor:pointer;transition:background .15s}
+.seg button.on{background:var(--ink);color:var(--sun)}
+
+/* <CopyBtn>: icon only, the size of the text next to it */
+.cpy{display:inline-flex;align-items:center;justify-content:center;width:1.15em;height:1.15em;margin-left:3px;vertical-align:-.18em;padding:0;border:0;background:none;color:var(--mut);cursor:pointer;font:800 1em var(--font-baloo),sans-serif;line-height:1;transition:color .15s,transform .1s}
+.cpy svg{width:100%;height:100%}
+.cpy:hover{color:var(--pk)}
+.cpy:active{transform:scale(.88)}
+.cpy.ok{color:var(--grn)}
+/* Bigger tap area on phones without making the icon bigger */
+@media(max-width:600px){.cpy{position:relative}.cpy::after{content:"";position:absolute;inset:-10px}}
+
+/* ---------- <Chip>: small rounded labels ---------- */
+.ch{display:inline-block;font-size:11px;font-weight:700;background:var(--lav);border:var(--bd-thin);border-radius:var(--r-pill);padding:0 8px}  /* channel */
+.tg{display:inline-block;font-size:12.5px;font-weight:800;border:var(--bd-thin);border-radius:var(--r-pill);padding:1px 9px;color:var(--ink)}.tg.crab{background:var(--co)}.tg.shrimp{background:var(--aq)}  /* item kind */
+.otags{display:inline-flex;gap:4px;vertical-align:2px;margin-left:2px}
+.otag{font-size:11px;font-weight:800;border:var(--bd-thin);border-radius:var(--r-pill);padding:0 7px;white-space:nowrap}  /* order option */
+.otag.steam{background:var(--peach)}.otag.live{background:var(--pk2)}.otag.raw{background:var(--mint)}
+.wn{display:inline-block;font-size:11.5px;font-weight:800;border:var(--bd-thin);border-radius:var(--r-pill);padding:0 8px;vertical-align:1px}  /* warning */
+.wn.late{background:var(--red);color:var(--white)}
+
+/* ---------- <Toolbar>: page title with controls on the right ---------- */
+.calbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+.calbar h2{font:800 22px var(--font-baloo),sans-serif;margin:0 auto 0 0}.calbar h2 small{font-size:15px;color:var(--mut)}
+.calbar .ghost:disabled{opacity:.45;cursor:default;transform:none;background:var(--wh)}
+
+/* ---------- <Table> ---------- */
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:7px 4px;border-bottom:var(--bd-soft)}th{color:var(--mut);font-weight:700;font-size:13px}
+td.r,th.r{text-align:right}
+
+/* ---------- Pickers: <Combobox>, <Select>, <DatePicker>, <TimePicker> ---------- */
+.cb,.pk{position:relative;min-width:0}
+.sl{position:relative;min-width:0}
+.add>.cb{flex:1 1 130px}
+.add>.sl{flex:1 1 130px}
+@media(max-width:600px){.add>.cb{flex:1 1 100%}.add>.sl{flex:1 1 100%}}
+.cb input{width:100%;padding-right:44px}
+.pop{background:var(--wh);border:var(--bd);border-radius:var(--r-lg);box-shadow:var(--lift-3);z-index:var(--z-pop);animation:popin .14s ease-out}
+.cb-list{position:absolute;left:0;right:0;top:calc(100% + 6px);min-width:220px;max-height:280px;overflow:auto;margin:0;padding:6px;list-style:none;overscroll-behavior:contain}
+.cb-list li{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:8px 10px;border-radius:var(--r-sm);cursor:pointer;line-height:1.3}
+.cb-list li small{color:var(--mut);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%}
+.cb-list li.act{background:var(--pk2)}
+.cb-list li.sel{font-weight:700}
+.cb-list li.sel::after{content:"✓";color:var(--pk);margin-left:auto}
+.cb-list li.none{cursor:default;color:var(--mut);font-size:13.5px;background:none}
+/* Group headings inside a list (e.g. Cua / Tôm in the dish list) */
+.cb-list li.grp{cursor:default;padding:8px 10px 3px;font:800 12px var(--font-baloo),sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);background:none}
+.cb-list li.grp:not(:first-child){margin-top:4px;border-top:1.5px dashed var(--ln)}
+.sl .cb-list{min-width:100%}
+/* Hand-drawn chevron that flips up while the list is open */
+.dd-tog{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:grid;place-items:center;padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background .15s}
+.cb .dd-tog:hover{background:var(--pk2)}
+.dd-chev{transition:transform .25s cubic-bezier(.3,1.5,.5,1)}
+.cb.open .dd-chev,.sl.open .dd-chev{transform:rotate(180deg)}
+.sl-btn{position:relative;width:100%;display:flex;align-items:center;font:inherit;color:var(--ink);background:var(--wh);border:var(--bd);border-radius:var(--r-md);padding:10px 44px 10px 12px;cursor:pointer;text-align:left;transition:box-shadow .15s}
+.sl-btn>span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sl.open .sl-btn,.cb.open input{box-shadow:var(--ring)}
+/* Date / time field: looks like the other inputs, opens a themed popup */
+.pk-btn{width:100%;display:flex;align-items:center;gap:8px;font:inherit;color:var(--ink);background:var(--wh);border:var(--bd);border-radius:var(--r-md);padding:10px 12px;cursor:pointer;text-align:left;transition:box-shadow .15s}
+.pk.open .pk-btn{box-shadow:var(--ring)}
+.pk-lbl{color:var(--mut);font-size:13px;font-weight:700;white-space:nowrap}
+.pk-btn b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pk-btn b.ph{color:var(--mut)}
+.pk-ic{margin-left:auto;font-size:15px}
+/* Popup under the field on wide screens, bottom sheet with a backdrop on phones */
+.sheet{position:absolute;left:0;top:calc(100% + 6px);width:300px;padding:12px}
+.sheet-bg{display:none}
+.cal-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;font:800 16px var(--font-baloo),sans-serif}
+.cal-h .ghost{padding:2px 12px;font-size:18px;line-height:1.2}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-wd{text-align:center;font-size:11.5px;font-weight:800;color:var(--mut);padding:2px 0}
+.cal-g button,.tp-h button,.tp-m button{font:700 14px var(--font-viet),sans-serif;color:var(--ink);background:none;border:2px solid transparent;border-radius:var(--r-sm);cursor:pointer;padding:0;transition:background .12s}
+.cal-g button{aspect-ratio:1}
+.cal-g button:hover,.tp-h button:hover,.tp-m button:hover{background:var(--pk2)}
+.cal-g button.now{border:2px dashed var(--pk)}
+.tp-t{font:800 13px var(--font-baloo),sans-serif;color:var(--mut);margin:2px 2px 4px}
+.tp-h{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:8px}
+.tp-m{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tp-h button,.tp-m button{padding:7px 0;border:2px solid var(--ln)}
+.cal-g button.sel,.tp-h button.sel,.tp-m button.sel{background:var(--pk);color:var(--white);border:var(--bd);box-shadow:var(--drop-1)}
+.pk-foot{display:flex;flex-direction:row-reverse;justify-content:flex-start;gap:8px;margin-top:10px}
+.pk-foot .btn{padding:4px 18px;font-size:15px}
+@media(max-width:600px){
+  .sheet-bg{display:block;position:fixed;inset:0;background:var(--shade);z-index:59;animation:fadein .15s}
+  .sheet{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;border-radius:20px 20px 0 0;border-bottom:0;box-shadow:0 -4px 0 var(--ink);padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));animation:sheetup .22s cubic-bezier(.3,1,.4,1)}
+  .cal-g button{font-size:16px;aspect-ratio:auto;height:42px}
+  .tp-h button,.tp-m button{padding:10px 0;font-size:16px}
+  .cb-list{max-height:240px}
+  .cb-list li{padding:10px}
+}
+/* Date/time fields in a form: label + value in one field; on phones two side by side, label above the value */
+.add>.pk.dt{flex:0 1 265px}
+@media(max-width:600px){
+  .add>.pk.dt{flex:1 1 calc(50% - 5px)}
+  .add>.pk.dt .pk-btn{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:6px;padding:4px 10px 6px}
+  .add>.pk.dt .pk-lbl,.add>.pk.dt .pk-ic{font-size:11.5px;line-height:1.3}
+  .add>.pk.dt .pk-btn b{grid-row:2;font-size:15px}
+  .add>.pk.dt .pk-ic{grid-row:1/3;grid-column:2;align-self:center}
+}
+
+/* ---------- <useConfirm> dialog ---------- */
+.cfm{padding:0;border:var(--bd);border-radius:var(--r-2xl);background:var(--wh);color:var(--ink);box-shadow:var(--lift-4);width:min(400px,calc(100vw - 32px));max-width:none;animation:cfm-in .18s ease-out}
+.cfm::backdrop{background:rgba(59,47,92,.38)}
+.cfm-in{padding:18px 20px 16px}
+.cfm h3{margin:0 0 6px;font:800 21px var(--font-baloo),sans-serif;line-height:1.25}
+.cfm-b{font-size:15px;color:var(--mut);overflow-wrap:anywhere}
+.cfm-b b{color:var(--ink)}
+.cfm-acts{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.cfm-acts .ghost{padding:6px 16px;font-size:14px}
+@keyframes cfm-in{from{opacity:0;transform:translateY(8px) scale(.97)}}
+@media(max-width:600px){.cfm-acts>*{flex:1 1 0}}
+
+/* ---------- <Toast>: message with an action and a bar showing the time left ---------- */
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:var(--z-pop);display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);padding:10px 12px 12px 16px;background:var(--ink);color:var(--wh);border:var(--bd);border-radius:var(--r-lg);box-shadow:4px 4px 0 var(--shade);font-weight:700;overflow:hidden;animation:toast-in .2s ease-out}
+.toast span{min-width:0;overflow-wrap:anywhere}
+.toast .ghost{flex:none;background:var(--sun);padding:4px 14px;font-size:14px}
+.toast-bar{position:absolute;left:0;bottom:0;height:4px;width:100%;background:var(--pk);transform-origin:left;animation:toast-bar linear forwards}
+@keyframes toast-in{from{opacity:0;transform:translate(-50%,10px)}}
+@keyframes toast-bar{to{transform:scaleX(0)}}
+@media(max-width:600px){.toast{width:calc(100vw - 32px)}.toast span{flex:1}}

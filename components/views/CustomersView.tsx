@@ -1,11 +1,13 @@
 "use client";
 
-import type { ViewProps } from "./ui";
+import { Empty, Panel, Stat, Stats, TwoCols } from "@/components/ui";
+import type { ViewProps } from "./types";
 import { day, orderTotal, vnd } from "@/lib/store";
 
 interface Cust { name: string; n: number; sum: number; last: string; phone: string }
 
-export default function Customers({ s, t }: ViewProps) {
+/** Customers tab: counts, orders by channel, best customers, who to message again */
+export default function CustomersView({ s, t }: ViewProps) {
   const m: Record<string, Cust> = {};
   s.orders.forEach((o) => {
     const k = o.name.toLowerCase();
@@ -26,14 +28,13 @@ export default function Customers({ s, t }: ViewProps) {
 
   return (
     <>
-      <div className="stats">
-        <div className="stat"><small>{t.cust}</small><div>{A.length}</div></div>
-        <div className="stat"><small>{t.rep}</small><div>{rep}</div></div>
-        <div className="stat"><small>{t.avg}</small><div>{vnd(s.orders.length ? tot / s.orders.length : 0)}</div></div>
-      </div>
-      <div className="two">
-        <div className="panel">
-          <h2>{t.byCh}</h2>
+      <Stats>
+        <Stat label={t.cust} value={A.length} />
+        <Stat label={t.rep} value={rep} />
+        <Stat label={t.avg} value={vnd(s.orders.length ? tot / s.orders.length : 0)} />
+      </Stats>
+      <TwoCols>
+        <Panel title={t.byCh}>
           {Object.keys(ch).map((k) => {
             const q = (ch[k] / s.orders.length) * 100;
             return (
@@ -43,10 +44,9 @@ export default function Customers({ s, t }: ViewProps) {
               </div>
             );
           })}
-          {!s.orders.length && <div className="empty">{t.seeCh}</div>}
-        </div>
-        <div className="panel">
-          <h2>{t.best}</h2>
+          {!s.orders.length && <Empty>{t.seeCh}</Empty>}
+        </Panel>
+        <Panel title={t.best}>
           {A.length ? (
             <table>
               <thead><tr><th>{t.nm}</th><th className="r">{t.oc}</th><th className="r">{t.sp}</th></tr></thead>
@@ -56,11 +56,10 @@ export default function Customers({ s, t }: ViewProps) {
                 ))}
               </tbody>
             </table>
-          ) : <div className="empty">{t.noC}</div>}
-        </div>
-      </div>
-      <div className="panel">
-        <h2>{t.again}</h2>
+          ) : <Empty>{t.noC}</Empty>}
+        </Panel>
+      </TwoCols>
+      <Panel title={t.again}>
         {due.length ? (
           <table>
             <thead><tr><th>{t.nm}</th><th>{t.phoneCol}</th><th>{t.lastO}</th><th className="r">{t.oc}</th></tr></thead>
@@ -74,8 +73,8 @@ export default function Customers({ s, t }: ViewProps) {
               ))}
             </tbody>
           </table>
-        ) : <div className="empty">{t.every}</div>}
-      </div>
+        ) : <Empty>{t.every}</Empty>}
+      </Panel>
     </>
   );
 }

@@ -1,0 +1,17 @@
+/* Delivery calendar: one column per day, small event cards */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
+@media(max-width:1099px){.cal{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:599px){.cal{grid-template-columns:1fr}}
+.day{background:rgba(255,254,247,.6);border:var(--bd);border-radius:var(--r-xl);padding:8px;min-height:300px;box-shadow:var(--lift-2);min-width:0}
+@media(max-width:1099px){.day{min-height:0}}
+/* Clicking a day's title opens that day on the Orders board */
+.day h3{margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:4px;font:800 15px/1.2 var(--font-baloo),sans-serif;padding:4px 6px 4px 10px;border:var(--bd);border-radius:var(--r-pill);background:var(--lil);cursor:pointer;user-select:none;touch-action:manipulation;transition:filter .15s}
+.day h3:hover{filter:brightness(.95)}
+.day.today{background:var(--tint);outline:3px dashed var(--pk);outline-offset:2px}.day.today h3{background:var(--sun)}
+.day.past{opacity:.7}
+.ev{background:var(--wh);border:var(--bd);border-radius:var(--r-md);padding:7px 9px;margin-bottom:8px;font-size:13.5px;box-shadow:var(--lift-1);overflow-wrap:anywhere}
+.ev b{font:800 15px var(--font-baloo),sans-serif}
+.ev .evt{display:flex;justify-content:space-between;gap:6px;font-weight:800;color:var(--red);margin-bottom:2px}
+.ev .m{color:var(--mut);font-size:12.5px}.ev .due{font-size:12.5px;font-weight:700;margin-top:2px}
+.ev.done{opacity:.5}
+.evs{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}.evs .ev{margin:0}

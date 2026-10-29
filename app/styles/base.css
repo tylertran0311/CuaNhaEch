@@ -1,0 +1,42 @@
+/* Base: reset, page background, shared keyframes, scrollbars. No component styles here. */
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;color:var(--ink);font:17px/1.5 var(--font-viet),system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* Page background: soft yellow with offset polka dots and a sparse, faint crab pattern (also behind the loader) */
+body,.loader{background-color:var(--page);background-image:url(/bg-crabs.png),radial-gradient(circle,var(--dot) 3px,transparent 3.6px),radial-gradient(circle,var(--dot) 3px,transparent 3.6px);background-size:360px 360px,36px 36px,36px 36px;background-position:0 0,0 0,18px 18px}
+body{background-attachment:fixed}
+@media(max-width:600px){body,.loader{background-size:280px 280px,30px 30px,30px 30px;background-position:0 0,0 0,15px 15px}}
+
+button:focus-visible,input:focus-visible,select:focus-visible{outline:var(--focus);outline-offset:2px}
+
+/* Shared animations */
+@keyframes tw{0%,100%{opacity:.15;transform:scale(.7) rotate(0)}50%{opacity:.9;transform:scale(1.15) rotate(20deg)}}
+@keyframes bob{50%{transform:translateY(-5px) rotate(-4deg)}}
+@keyframes mq{to{transform:translateX(-50%)}}
+@keyframes pop{0%{transform:scale(.55) rotate(-8deg);opacity:0}70%{transform:scale(1.07) rotate(2deg)}100%{transform:none;opacity:1}}
+@keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes rise{from{transform:scaleY(0)}}
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(255,111,174,.35)}}
+@keyframes popin{from{opacity:0;transform:translateY(-4px)}}
+@keyframes fadein{from{opacity:0}}
+@keyframes sheetup{from{transform:translateY(100%)}}
+
+/* Doodle scrollbars: chunky pink thumb with an ink outline, on the page and inside dropdowns */
+html,.cb-list{scrollbar-width:thin;scrollbar-color:var(--pk) transparent}
+@supports selector(::-webkit-scrollbar){
+  html,.cb-list{scrollbar-width:auto;scrollbar-color:auto}
+  ::-webkit-scrollbar{width:14px;height:14px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--pk2);border:var(--bd);border-radius:var(--r-pill);background-clip:padding-box;box-shadow:inset 0 0 0 2px var(--wh)}
+  ::-webkit-scrollbar-thumb:hover{background:var(--pk)}
+  ::-webkit-scrollbar-corner{background:transparent}
+  ::-webkit-scrollbar-button{display:none;width:0;height:0}
+  .cb-list::-webkit-scrollbar{width:12px}
+  .cb-list::-webkit-scrollbar-track{margin:8px 0}
+}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}

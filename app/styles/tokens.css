@@ -1,0 +1,86 @@
+/*
+ * Design tokens — the only place raw colors, radii, borders and shadows are written.
+ * Every other stylesheet uses these variables, so a new page automatically looks like the rest.
+ * Breakpoints (CSS variables can't be used in media queries): phone ≤ 600px, desktop ≥ 700px.
+ */
+:root{
+  /* Fonts (loaded in app/layout.tsx) */
+  --font-viet:"Be Vietnam Pro";   /* body text */
+  --font-baloo:"Baloo 2";         /* headings, buttons, labels */
+  --font-bubble:"Paytone One";    /* the cartoon logo title */
+  --font-pixel:"VT323";           /* the loading screen */
+
+  /* Core palette */
+  --ink:#3b2f5c;      /* text, borders, shadows */
+  --ink-deep:#1b1530; /* pixel text outline */
+  --mut:#7a6a94;      /* secondary text */
+  --wh:#fffef7;       /* surfaces */
+  --white:#fff;       /* text on pink / red fills, pixel text */
+  --pk:#ff6fae;       /* accent: focus, active, highlights */
+  --pk2:#ffc9e0;      /* soft accent: hover, selected */
+  --lil:#d3c6ff;
+  --aq:#8fe3d5;
+  --sun:#ffd84a;      /* notes, "on" ghost buttons */
+  --co:#ffa285;
+  --sky:#3db7f2;
+  --red:#e5487f;      /* errors, money out, danger */
+  --grn:#22a58f;      /* success, money in */
+  --ln:#e6d7a0;       /* soft dashed dividers */
+  --tint:#fff6d6;     /* tinted boxes inside cards */
+  --bg:#fff3b8;
+
+  /* Soft tones for chips, stats and column headers */
+  --peach:#ffd0bd;
+  --mint:#c9f0dc;
+  --lime:#c5efb0;
+  --lav:#ebe3ff;
+  --sea:#dff8f2;
+  --blush:#ffe1ef;
+  --butter:#fff0b0;
+  --pk-soft:#ffeef6;  /* form being edited */
+  --pk-tint:#ffe3f0;  /* drop target */
+  --red-soft:#ffeaf2; /* invalid field */
+  --red-note:#ffd6e4; /* error note */
+  --grn-soft:#e6f8f3; /* success message */
+  --danger-hi:#ff8a8a;--danger-lo:#e5484d;
+  --primary-hi:#ff9ccb;--primary-lo:#ff5fa2;
+
+  /* Page background */
+  --page:#fff7d4;
+  --dot:#ffe39a;
+
+  /* Borders */
+  --bd:2px solid var(--ink);
+  --bd-thin:1.5px solid var(--ink);
+  --bd-dash:2px dashed var(--ink);
+  --bd-dash-thin:1.5px dashed var(--ink);
+  --bd-soft:2px dashed var(--ln);
+
+  /* Radii */
+  --r-xs:8px;
+  --r-sm:10px;
+  --r-md:12px;   /* fields */
+  --r-lg:14px;   /* cards, notes, popups */
+  --r-xl:16px;   /* panels */
+  --r-2xl:18px;  /* columns, dialogs */
+  --r-pill:999px;
+
+  /* Hard "sticker" shadows: drop = straight down (buttons), lift = down-right (cards) */
+  --drop-1:0 2px 0 var(--ink);
+  --drop-2:0 3px 0 var(--ink);
+  --drop-3:0 4px 0 var(--ink);
+  --lift-1:2px 2px 0 var(--ink);
+  --lift-2:3px 3px 0 var(--ink);
+  --lift-3:4px 4px 0 var(--ink);
+  --lift-4:5px 5px 0 var(--ink);
+  --shade:rgba(59,47,92,.35);    /* soft ink for backdrops and dragged cards */
+
+  /* Focus */
+  --ring:0 0 0 4px var(--pk2);   /* glow around a focused field */
+  --focus:3px solid var(--pk);   /* keyboard focus outline */
+
+  /* Layers */
+  --z-drag:50;
+  --z-pop:60;
+  --z-loader:100;
+}

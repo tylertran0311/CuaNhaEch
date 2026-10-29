@@ -1,19 +1,20 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import Background from "./Background";
-import logo from "@/public/logo.png";
-import Orders, { type DayFilter } from "./Orders";
-import MenuView from "./MenuView";
-import CalendarView from "./CalendarView";
-import MoneyView from "./MoneyView";
-import Customers from "./Customers";
-import Login from "./Login";
-import Loader from "./Loader";
-import type { Update } from "./ui";
-import { LANGS, T, type Lang } from "@/lib/i18n";
+import Ticker from "./layout/Ticker";
+import Loader from "./layout/Loader";
+import Header from "./layout/Header";
+import TabBar from "./layout/TabBar";
+import { Button, Note } from "./ui";
+import OrdersView, { type DayFilter } from "./views/OrdersView";
+import MenuView from "./views/MenuView";
+import CalendarView from "./views/CalendarView";
+import MoneyView from "./views/MoneyView";
+import CustomersView from "./views/CustomersView";
+import Login from "./views/Login";
+import type { Update } from "./views/types";
+import { T, type Lang } from "@/lib/i18n";
 import { day, load, loadLang, loadLocalRaw, save, saveLang, trashExpired, type State } from "@/lib/store";
 import { supabase } from "@/lib/supabase";
 import { isMember, loadCloud, subscribe, syncDiff } from "@/lib/cloud";
@@ -144,61 +145,33 @@ export default function Dashboard() {
 
   return (
     <>
-      <Background />
+      <Ticker />
       <Loader text={t.loading} done={!!s || needLogin || denied || !!loadErr} />
       <div className="wrap">
-        <div className="top">
-          <div className="brand">
-            <Image className="logo" src={logo} alt="Cua nhà Ếch" priority />
-            <div>
-              <h1>Cua Nhà <b>Ếch</b></h1>
-              <p className="sub">{t.sub}</p>
-            </div>
-          </div>
-          <div className="topr">
-            <div className="lang">
-              {LANGS.map((l) => (
-                <button key={l} className={l === lang ? "on" : ""} onClick={() => changeLang(l)}>{l.toUpperCase()}</button>
-              ))}
-            </div>
-            {supabase && session && (
-              <div className="who">
-                <span>{userEmail}</span>
-                <button className="ghost" onClick={() => supabase!.auth.signOut()}>{t.logout}</button>
-              </div>
-            )}
-          </div>
-        </div>
+        <Header t={t} lang={lang} onLang={changeLang} email={supabase && session ? userEmail : undefined}
+          onLogout={() => supabase?.auth.signOut()} />
 
         {needLogin && <Login sb={supabase!} t={t} />}
-        {denied && <div className="note">{t.notMember.replace("{e}", userEmail)}</div>}
-        {loadErr && (
-          <div className="note">{t.loadErr}{loadErr}<button className="ghost" onClick={() => location.reload()}>{t.reload}</button></div>
-        )}
+        {denied && <Note>{t.notMember.replace("{e}", userEmail)}</Note>}
+        {loadErr && <Note>{t.loadErr}{loadErr}<Button onClick={() => location.reload()}>{t.reload}</Button></Note>}
 
         {s && view && (
           <>
-            {syncErr && (
-              <div className="note bad-note">{t.syncErr}{syncErr}<button className="ghost" onClick={() => location.reload()}>{t.reload}</button></div>
-            )}
+            {syncErr && <Note bad>{t.syncErr}{syncErr}<Button onClick={() => location.reload()}>{t.reload}</Button></Note>}
             {local && (
-              <div className="note">
+              <Note>
                 <span>{t.importNote.replace("{n}", String(local.orders.length)).replace("{m}", String(local.exp.length))}</span>
-                <button className="ghost" disabled={importing} onClick={importLocal}>{importing ? t.importing : t.importB}</button>
-                <button className="ghost" onClick={dismissImport}>{t.dismiss}</button>
-              </div>
+                <Button disabled={importing} onClick={importLocal}>{importing ? t.importing : t.importB}</Button>
+                <Button onClick={dismissImport}>{t.dismiss}</Button>
+              </Note>
             )}
-            <nav>
-              {TABS.map((k, i) => (
-                <button key={k} className={k === tab ? "on" : ""} onClick={() => setTab(k)}>{t.tabs[i]}</button>
-              ))}
-            </nav>
+            <TabBar tabs={TABS} labels={t.tabs} value={tab} onChange={setTab} />
             <div id="view" className="in" key={tab}>
-              {tab === "orders" && <Orders s={view} trash={trash} t={t} update={update} goMenu={() => setTab("menu")} focus={focus} setFocus={setFocus} />}
+              {tab === "orders" && <OrdersView s={view} trash={trash} t={t} update={update} goMenu={() => setTab("menu")} focus={focus} setFocus={setFocus} />}
               {tab === "cal" && <CalendarView s={view} t={t} update={update} openDay={(d) => { setFocus(d); setTab("orders"); }} />}
               {tab === "menu" && <MenuView s={view} t={t} update={update} />}
               {tab === "money" && <MoneyView s={view} t={t} update={update} />}
-              {tab === "cust" && <Customers s={view} t={t} update={update} />}
+              {tab === "cust" && <CustomersView s={view} t={t} update={update} />}
             </div>
           </>
         )}

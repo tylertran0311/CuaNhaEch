@@ -1,5 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import "./globals.css";
+// Styles, in cascade order: tokens → base → UI kit → app shell → one file per tab (see docs/design-system.md)
+import "./styles/tokens.css";
+import "./styles/base.css";
+import "./styles/ui.css";
+import "./styles/layout.css";
+import "./styles/orders.css";
+import "./styles/calendar.css";
+import "./styles/insights.css";
 
 // Fonts load from Google at runtime (not next/font) so builds don't need to download them
 const FONTS = "https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Paytone+One&family=VT323&family=Be+Vietnam+Pro:wght@400;500;700&display=swap";

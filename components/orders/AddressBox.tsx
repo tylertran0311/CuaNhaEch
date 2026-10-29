@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Combobox, type Opt } from "./Pickers";
+import { Combobox, type Opt } from "@/components/ui";
 import type { Dict } from "@/lib/i18n";
 import { fold } from "@/lib/text";
 import { supabase } from "@/lib/supabase";

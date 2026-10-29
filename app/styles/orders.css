@@ -1,0 +1,98 @@
+/* Orders tab: order form, day bar, board columns, order cards, trash. Uses the UI kit for every control. */
+
+/* ---------- Order form ---------- */
+.add.editing{background:var(--pk-soft)}
+.fhead{flex:1 1 100%;display:flex;align-items:center;justify-content:space-between;gap:10px;font:800 17px var(--font-baloo),sans-serif}
+.fhead-acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.edh{flex:1 1 auto;font:800 16px var(--font-baloo),sans-serif;color:var(--red)}
+@media(max-width:600px){.fhead{flex-wrap:wrap}}
+/* Folded bar and form swap with a height animation (grid rows 0fr ↔ 1fr) plus a fade and slight slide */
+.fold{display:grid;grid-template-rows:0fr;opacity:0;transform:translateY(-6px);transition:grid-template-rows .4s cubic-bezier(.4,0,.2,1),opacity .3s ease,transform .4s cubic-bezier(.4,0,.2,1)}
+.fold.on{grid-template-rows:1fr;opacity:1;transform:none}
+.fold>div{min-height:0;overflow:hidden}
+.fold.done>div{overflow:visible}
+.add.foldbar{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;font:800 17px var(--font-baloo),sans-serif;color:var(--ink);text-align:left;transition:background .15s}
+.add.foldbar:hover{background:var(--pk2)}
+/* Address with suggestions and the Maps link each take a full row; the address read from the link sits under it */
+.add>.cb.a-addr{flex:1 1 100%}
+.add>.a-map{flex:1 1 100%;min-width:0}
+.add>.lsg{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:-4px;font-size:14px;color:var(--mut);overflow-wrap:anywhere}
+.add>.lsg b{color:var(--ink)}
+/* Steamed / live options share the date/time row */
+.add>.opts{flex:1 1 280px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+@media(max-width:600px){.add>.opts{flex:1 1 100%}}
+.optfee{font-weight:700;color:var(--red);font-size:14px}
+/* Item lines: dish, quantity in kg, remove; on phones the dish takes its own row */
+.lines{flex:1 1 100%;display:flex;flex-direction:column;gap:8px}
+.ln{display:flex;gap:8px}.ln .lp{flex:2 1 160px}
+.ln .u.lq{flex:1 1 110px;padding-right:12px}
+.ln .u.lq input{padding-right:4px}
+@media(max-width:600px){.ln{flex-wrap:wrap}.ln .lp{flex:1 1 100%}}
+.fbtns{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:8px}
+.notef{flex:1 1 100%;display:flex;gap:8px;align-items:flex-start}
+.notef textarea{flex:1 1 auto;min-width:0}
+@media(max-width:600px){.notef{flex-direction:column;align-items:stretch}}
+/* Quick entry: paste the customer's reply to fill the form */
+.quick{flex:1 1 100%;display:flex;flex-direction:column;gap:8px;background:var(--tint);border:var(--bd-dash);border-radius:var(--r-lg);padding:12px;animation:popin .18s ease-out}
+.quick p{margin:0;font-size:14px;color:var(--mut)}
+.quick textarea{width:100%;min-height:150px;line-height:1.5}
+.quick-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.quick-acts .btn{padding:5px 20px;font-size:15px}
+.quick-acts .btn:disabled{opacity:.5;cursor:default;transform:none}
+.qmsg{flex:1 1 100%;font-size:14px;font-weight:700;color:var(--grn);background:var(--grn-soft);border:2px solid var(--grn);border-radius:var(--r-md);padding:6px 12px}
+@media(max-width:600px){.quick-acts>*{flex:1 1 auto}.quick textarea{min-height:170px;font-size:16px}}
+
+/* ---------- Day bar: one delivery day at a time ---------- */
+.daybar{margin-top:18px}
+.daypk .pk-btn{border-radius:var(--r-pill);padding:5px 14px;box-shadow:var(--drop-1);font-weight:700}
+.daypk .pk-btn b{font-weight:700}
+.daybar .daypk{flex:0 0 auto}
+@media(max-width:600px){.daybar h2{flex:1 1 100%;font-size:20px}.daybar .daypk{flex:1 1 150px;min-width:150px}}
+
+/* ---------- Board ---------- */
+.board{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:18px}
+@media(max-width:1799px){.board{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:999px){.board{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
+@media(max-width:559px){.board{grid-template-columns:1fr}}
+.col{background:rgba(255,254,247,.55);border:var(--bd);border-radius:var(--r-2xl);padding:12px;min-height:320px;box-shadow:var(--lift-2);transition:background .2s}
+.col h3{margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;gap:6px;font:800 16px/1.2 var(--font-baloo),sans-serif;padding:5px 8px 5px 12px;border:var(--bd);border-radius:var(--r-pill)}
+.col h3 b{font-weight:800}
+.col:nth-child(1) h3{background:var(--sun)}.col:nth-child(2) h3{background:var(--pk2)}.col:nth-child(3) h3{background:var(--lil)}.col:nth-child(4) h3{background:var(--aq)}.col:nth-child(5) h3{background:var(--peach)}.col:nth-child(6) h3{background:var(--lime)}
+.col h3 .n,.day h3 .n{background:var(--wh);border:var(--bd);border-radius:var(--r-pill);min-width:24px;text-align:center;font-size:12px;padding:0 6px}
+.col.over{background:var(--pk-tint);outline:3px dashed var(--pk);outline-offset:-3px;animation:pulse 1s infinite}
+
+/* ---------- Order card ---------- */
+.card{background:var(--wh);border:var(--bd);border-radius:var(--r-lg);padding:14px 12px;margin-bottom:12px;font-size:15.5px;box-shadow:var(--lift-2);cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none;position:relative;transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translate(-1px,-2px) rotate(-.7deg);box-shadow:5px 6px 0 var(--ink)}
+.card.pop{animation:pop .5s cubic-bezier(.3,1.5,.5,1)}
+.card.editing{outline:3px dashed var(--pk);outline-offset:3px}
+.ghostc{position:fixed;z-index:var(--z-drag);pointer-events:none;box-shadow:8px 10px 0 rgba(59,47,92,.3);transform:rotate(4deg) scale(1.05);margin:0}
+.grip{float:right;touch-action:none;cursor:grab;padding:0 4px 6px 10px;color:var(--mut);font-size:16px;line-height:1}
+.card b{font:800 19px var(--font-baloo),sans-serif}.card .m{color:var(--mut)}
+.card b.wt{font:700 1em var(--font-viet),sans-serif}
+.card .ch{font-size:12.5px;padding:1px 9px;margin-right:2px;vertical-align:2px}
+.ci{font-size:.92em;margin-top:2px;overflow-wrap:anywhere}.ci a{color:inherit;font-weight:700}
+.card .ci .otags{margin-left:0}
+.onote{margin:4px 0;padding:4px 8px;background:var(--tint);border:var(--bd-dash-thin);border-radius:var(--r-xs);font-size:13.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+/* Deposit box */
+.dep{margin-top:8px;padding:6px 10px;background:var(--tint);border:var(--bd-dash-thin);border-radius:var(--r-sm);font-size:14px}
+.dep div{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap}
+.dep span:first-child{color:var(--mut);font-weight:700}
+.dep strong{color:var(--red)}
+.dep .paid{margin-top:4px;color:var(--grn);font-weight:700}
+.dep .nodep{margin-top:4px;color:var(--red);font-weight:700}
+/* Actions row */
+.card .row{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;margin-top:8px}
+.card .acts{display:flex;gap:4px;margin-left:auto}
+.card .row .ghost{font-size:12.5px;padding:2px 9px}
+.row .dp{background:var(--pk2);white-space:nowrap}
+
+/* ---------- Trash of deleted orders, under the board ---------- */
+.trash{margin-top:14px}
+.trash-list{margin-top:10px;background:var(--wh);border:var(--bd-dash);border-radius:var(--r-lg);padding:6px 12px}
+.trash-list .sub{margin:4px 0 6px}
+.trash-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;padding:8px 0;border-top:1.5px dashed var(--ln);overflow-wrap:anywhere}
+.trash-row:first-of-type{border-top:0}
+.trash-info{flex:1 1 220px;min-width:0;font-size:14.5px}
+.trash-info small{color:var(--mut)}
+.trash-acts{display:flex;gap:8px}

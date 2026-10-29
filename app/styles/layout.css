@@ -1,0 +1,63 @@
+/* App shell: ticker, page width, header (logo, title, language, account), tab bar, login, loading screen */
+
+/* Scrolling ticker at the very top */
+.tick{position:relative;z-index:2;overflow:hidden;border-bottom:var(--bd);background:linear-gradient(90deg,var(--pk2),var(--lil),var(--aq),var(--sun))}
+.tk{display:inline-block;white-space:nowrap;padding:4px 0;font:800 13px var(--font-baloo),sans-serif;letter-spacing:.14em;animation:mq 26s linear infinite}
+
+.wrap{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:22px 20px 70px}
+@media(min-width:700px){.wrap{max-width:1800px;padding:28px 32px 80px}}
+
+/* Header */
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}.brand .sub{margin-bottom:14px}
+.logo{height:68px;width:auto;animation:bob 3s ease-in-out infinite;filter:drop-shadow(2px 3px 0 rgba(59,47,92,.25))}
+@media(max-width:699px){.logo{height:56px}}
+@media(min-width:700px){.logo{height:84px}}
+/* Title: chunky cartoon letters (Powerpuff style) in solid blue and pink with a thick ink outline */
+h1{font:400 36px/1.1 var(--font-bubble),var(--font-baloo),system-ui,sans-serif;margin:0 0 2px;letter-spacing:.01em;color:var(--sky);-webkit-text-stroke:2.5px var(--ink);paint-order:stroke fill;text-shadow:3px 3px 0 var(--ink);transform:rotate(-2deg);transform-origin:left center}
+h1 b{font-weight:400;color:var(--pk);-webkit-text-stroke:2.5px var(--ink);paint-order:stroke fill;text-shadow:3px 3px 0 var(--ink)}
+h1::after{content:"★";display:inline-block;margin-left:.12em;font-size:.55em;vertical-align:.7em;color:var(--sun);-webkit-text-stroke:1.5px var(--ink);paint-order:stroke fill;text-shadow:none}
+@media(min-width:700px){h1{font-size:46px}}
+@media(max-width:699px){h1{font-size:30px;-webkit-text-stroke-width:2px;text-shadow:2px 2px 0 var(--ink)}h1 b{-webkit-text-stroke-width:2px;text-shadow:2px 2px 0 var(--ink)}}
+@media(max-width:380px){h1{font-size:26px}}
+
+/* Language switch and account */
+.topr{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.who{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);font-weight:700;flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:600px){
+  /* Phone: language and account in a slim bar above the logo */
+  .top{flex-direction:column;align-items:stretch;gap:10px}
+  .topr{order:-1;flex-direction:row;justify-content:space-between;align-items:center;gap:10px}
+  .who{flex-wrap:nowrap;min-width:0;gap:6px}
+  .who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .who .ghost{font-size:13px;padding:4px 12px;flex:none}
+  .topr .seg{flex:none}.topr .seg button{padding:4px 12px;font-size:13px}
+}
+
+/* Tab bar */
+nav{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px}
+nav button{background:var(--wh);border:var(--bd);border-radius:var(--r-pill);padding:6px 18px;font:800 15px var(--font-baloo),sans-serif;color:var(--ink);cursor:pointer;box-shadow:var(--drop-2);transition:transform .15s,background .15s,box-shadow .15s}
+nav button:hover{transform:translateY(-2px) rotate(-1.5deg)}
+nav button.on{background:var(--pk2);transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+nav button.on::before{content:"✦ "}
+@media(min-width:700px){nav button{font-size:17px;padding:8px 22px}}
+#view.in{animation:up .4s ease}
+
+.login{max-width:520px;margin:30px auto}
+
+/* Loading screen: hopping logo and white pixel-game letters with a hard, blocky outline */
+.loader{position:fixed;inset:0;z-index:var(--z-loader);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .45s ease,visibility .45s}
+.loader.done{opacity:0;visibility:hidden;pointer-events:none}
+.ld-crab{position:relative;display:flex;flex-direction:column;align-items:center}
+.ld-logo{width:min(220px,55vw);height:auto;animation:ldhop 1s cubic-bezier(.35,0,.25,1) infinite;filter:drop-shadow(3px 4px 0 rgba(59,47,92,.25));transform-origin:50% 100%}
+.ld-shadow{width:46%;height:14px;margin-top:2px;border-radius:50%;background:rgba(59,47,92,.18);animation:ldshadow 1s cubic-bezier(.35,0,.25,1) infinite}
+.ld-txt{display:flex;flex-wrap:wrap;justify-content:center;padding:0 16px;font:400 46px/1.25 var(--font-pixel),monospace;letter-spacing:.04em;color:var(--white);-webkit-text-stroke:0;paint-order:stroke fill;text-transform:uppercase;-webkit-font-smoothing:none;
+  text-shadow:-3px 0 0 var(--ink-deep),3px 0 0 var(--ink-deep),0 -3px 0 var(--ink-deep),0 3px 0 var(--ink-deep),-3px -3px 0 var(--ink-deep),3px -3px 0 var(--ink-deep),-3px 3px 0 var(--ink-deep),3px 3px 0 var(--ink-deep),6px 6px 0 rgba(27,21,48,.35)}
+@media(max-width:600px){.ld-txt{font-size:34px}}
+/* Letters hop in two hard steps instead of easing, like an 8-bit sprite */
+.ld-txt span{display:inline-block;animation:ldwave 1.2s steps(2,jump-none) infinite}
+.ld-txt .ld-dot{animation:ldblink 1.2s steps(1,end) infinite}
+@keyframes ldhop{0%,100%{transform:translateY(0) scale(1.06,.94)}15%{transform:translateY(0) scale(1)}50%{transform:translateY(-28px) rotate(-4deg)}85%{transform:translateY(0) scale(1)}}
+@keyframes ldshadow{0%,100%{transform:scaleX(1);opacity:1}50%{transform:scaleX(.6);opacity:.5}}
+@keyframes ldwave{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-10px)}}
+@keyframes ldblink{0%,100%{opacity:0}35%{opacity:1}}
