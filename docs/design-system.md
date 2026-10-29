@@ -17,7 +17,9 @@ See every component live at **`/admin/kit`**.
    Spacing helpers: `.mt-12`, `.mt-20`; text helpers: `.sub`, `.sub.tight`, `.sg`.
 5. **Mobile first.** Check every change at 375px wide. Phone breakpoint is `max-width:600px`,
    desktop is `min-width:700px`. Forms (`FormCard`) already go full width on phones.
-6. **Texts live in `lib/i18n.ts`** (VI and EN), never hard-coded in components.
+6. **Class names don't collide across surfaces.** The landing page owns `.lp` and every `lp-*` class (plus
+   `tone-*`); the dashboard never uses them. Prefer descriptive names (`ln-dish`, not two letters).
+7. **Texts live in `lib/i18n.ts`** (VI and EN), never hard-coded in components.
 
 ## Files
 
@@ -50,6 +52,7 @@ needs its own layout, an `app/styles/xxx.css` imported in `app/layout.tsx`.
 |---|---|
 | Main action of a form | `<Button variant="primary" type="submit">` |
 | Any other button | `<Button>` (ghost pill); `on` = selected; `variant="danger"` = destructive confirm |
+| Go to another page | `<LinkButton href>` (same look as `<Button>`) |
 | Icon-only square button next to fields | `<IconButton label="…">` |
 | Block of content with a title | `<Panel title="…">` |
 | Page title + controls | `<Toolbar title meta>` + `<Button>`s |

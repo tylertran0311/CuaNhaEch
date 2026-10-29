@@ -10,6 +10,8 @@
 /* Header */
 .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:12px}.brand .sub{margin-bottom:14px}
+.logo-link{display:flex;flex:none;border-radius:var(--r-lg)}
+.logo-link:hover .logo{filter:drop-shadow(2px 3px 0 rgba(59,47,92,.25)) brightness(1.05)}
 .logo{height:68px;width:auto;animation:bob 3s ease-in-out infinite;filter:drop-shadow(2px 3px 0 rgba(59,47,92,.25))}
 @media(max-width:699px){.logo{height:56px}}
 @media(min-width:700px){.logo{height:84px}}

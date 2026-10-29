@@ -24,10 +24,10 @@
 .optfee{font-weight:700;color:var(--red);font-size:14px}
 /* Item lines: dish, quantity in kg, remove; on phones the dish takes its own row */
 .lines{flex:1 1 100%;display:flex;flex-direction:column;gap:8px}
-.ln{display:flex;gap:8px}.ln .lp{flex:2 1 160px}
+.ln{display:flex;gap:8px}.ln .ln-dish{flex:2 1 160px}
 .ln .u.lq{flex:1 1 110px;padding-right:12px}
 .ln .u.lq input{padding-right:4px}
-@media(max-width:600px){.ln{flex-wrap:wrap}.ln .lp{flex:1 1 100%}}
+@media(max-width:600px){.ln{flex-wrap:wrap}.ln .ln-dish{flex:1 1 100%}}
 .fbtns{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:8px}
 .notef{flex:1 1 100%;display:flex;gap:8px;align-items:flex-start}
 .notef textarea{flex:1 1 auto;min-width:0}

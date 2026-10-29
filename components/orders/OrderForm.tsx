@@ -310,7 +310,7 @@ export default function OrderForm({ s, t, update, editing, onSaved, onCancel }: 
               {legacy && <div className="sg">{t.oldItems}{legacy}</div>}
               {lines.map((l) => (
                 <div className="ln" key={l.key}>
-                  <Select className="lp" label={t.itemMiss} value={pidOf(l)} options={dishOpts(l)}
+                  <Select className="ln-dish" label={t.itemMiss} value={pidOf(l)} options={dishOpts(l)}
                     onChange={(v) => setLine(l.key, { pid: v, snap: v === OLD ? l.snap : undefined })} />
                   {/* Quantities are always in kg; older lines entered per piece keep their unit */}
                   <UnitInput className="lq" bad={bad.lines} placeholder={t.qty} value={l.q} onChange={(v) => setLine(l.key, { q: v })}

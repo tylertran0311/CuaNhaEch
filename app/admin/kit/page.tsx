@@ -3,7 +3,7 @@
 // Living style guide: every UI kit component with sample data. Add an example here whenever the kit grows.
 import { useState } from "react";
 import {
-  Button, Chip, Combobox, CopyBtn, DatePicker, Empty, FormCard, FormError, IconButton, Money, Note, Panel, Segmented,
+  Button, LinkButton, Chip, Combobox, CopyBtn, DatePicker, Empty, FormCard, FormError, IconButton, Money, Note, Panel, Segmented,
   Select, Stat, Stats, TextArea, TextInput, TimePicker, Toast, ToggleChip, Toolbar, TwoCols, UnitInput, useConfirm,
 } from "@/components/ui";
 import { T } from "@/lib/i18n";
@@ -56,6 +56,7 @@ export default function KitPage() {
             <Button variant="danger">Danger</Button>
             <Button disabled>Disabled</Button>
             <IconButton label="Xóa">✕</IconButton>
+            <LinkButton href="/home">🏠 LinkButton</LinkButton>
           </div>
           <p className="sub mt-12">Copy: 0901 234 567 <CopyBtn text="0901 234 567" label="Copy" /></p>
           {/* <Chips> keeps chips on one line next to text; this demo row wraps instead */}
