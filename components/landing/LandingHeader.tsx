@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import logo from "@/public/logo.png";
 import { supabase } from "@/lib/supabase";
 
-const NAV = [["#san-pham", "Sản phẩm"], ["#thu-vien", "Thư viện"], ["#dat-hang", "Cách đặt"], ["#lien-he", "Liên hệ"]] as const;
+const NAV = [["#san-pham", "Bảng giá"], ["#chon-cua", "Chọn cua"], ["#thu-vien", "Thư viện"], ["#dat-hang", "Cách đặt"], ["#lien-he", "Liên hệ"]] as const;
 
 /** The shop's logo (the same crab as on the dashboard) */
 export function Mark() {

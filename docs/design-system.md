@@ -97,7 +97,9 @@ circles-squares-triangles, bold uppercase type in **Unbounded** (`--font-display
 - Products and prices come from the dashboard's menu (`lib/publicMenu.ts`, cached under the `menu` tag; the
   dashboard calls `POST /api/menu-changed` after a menu change). Per-item tag/photo: `PRODUCT_EXTRAS` in `lib/landing.ts`.
   Needs the "public read menu" policies from `supabase/schema.sql`; without them the default menu shows without prices.
-- Icons `<CrabIcon>` / `<ShrimpIcon>` (components/landing/Icons.tsx): built from basic shapes, primary colors only.
+- Icons `<CrabIcon>` / `<ShrimpIcon>` (components/landing/Icons.tsx) and illustrations in components/landing/Art.tsx
+  (`<HeroCrab>` poster, `<BadgeRing>` stamp, highlight icons, `<ApronIcon>` crab guide, `<SizeDots>`): basic shapes and primary
+  colors only. Sections are joined by `<Waves>` (rows of half circles); phones get a fixed call/Zalo bar (`.lp-dock`).
 - `<Gallery slides>`: swipeable slider (scroll snap), arrows, shape dots, keyboard arrows, autoplay that pauses.
 - Admin entry is hidden from customers: a "Quản lý" link shows only in a browser signed in to the dashboard,
   and tapping the logo 5 times opens `/admin`.
