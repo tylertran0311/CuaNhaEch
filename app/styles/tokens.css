@@ -79,6 +79,17 @@
   --ring:0 0 0 4px var(--pk2);   /* glow around a focused field */
   --focus:3px solid var(--pk);   /* keyboard focus outline */
 
+  /* Landing page (Bauhaus theme): primary colors, black, paper. Used only under .lp */
+  --bh-red:#e2412e;
+  --bh-blue:#1e4fae;
+  --bh-yellow:#f5bf1a;
+  --bh-black:#151515;
+  --bh-paper:#f3ede1;
+  --bh-paper2:#e8e0d0;
+  --bh-line:3px solid var(--bh-black);
+  --bh-shadow:6px 6px 0 var(--bh-black);
+  --font-display:"Unbounded";   /* landing headings */
+
   /* Layers */
   --z-drag:50;
   --z-pop:60;

@@ -30,11 +30,14 @@ app/styles/
   orders.css     Orders tab (form layout, board, cards, trash)
   calendar.css   Delivery calendar tab
   insights.css   Money / Customers / Menu tabs (charts, price list)
+  landing.css    public landing page (/home), Bauhaus theme, scoped under .lp
 components/
   ui/            UI kit — no business logic, no data
   layout/        app shell pieces (Header, TabBar, Ticker, Loader)
   orders/        order-specific parts (OrderForm, OrderCard, Trash, AddressBox, bits, useBoardDrag)
   views/         one component per tab (OrdersView, CalendarView, MenuView, MoneyView, CustomersView, Login)
+  landing/       public landing page (LandingPage, LandingHeader, Gallery, Pic)
+lib/landing.ts   landing texts, products, gallery slides, contact links — edit content here
   Dashboard.tsx  loads the data, holds the tab state, renders the shell and the current view
 ```
 
@@ -75,3 +78,19 @@ needs its own layout, an `app/styles/xxx.css` imported in `app/layout.tsx`.
 - **Borders** `--bd` (2px) · `--bd-thin` (1.5px, chips) · `--bd-dash` (notes, inner boxes) · `--bd-soft` (dividers)
 - **Radii** fields `--r-md` · cards/popups `--r-lg` · panels `--r-xl` · columns/dialogs `--r-2xl` · pills `--r-pill`
 - **Shadows** buttons `--drop-1..3` (straight down) · cards `--lift-1..4` (down-right) · focus `--ring` + `--focus`
+
+## Landing page theme (Bauhaus)
+
+The public page at `/home` (the site root redirects there) has its own look, deliberately different from the
+doodle dashboard: **Bauhaus** — primary red / blue / yellow, black, paper; 3px black lines, square corners,
+circles-squares-triangles, bold uppercase type in **Unbounded** (`--font-display`).
+
+- Colors and lines: the `--bh-*` tokens in `tokens.css` only. Styles live in `landing.css`, all under `.lp`,
+  so they never affect the dashboard (and the dashboard kit is not used there).
+- Buttons `.lp-btn` (black, offset colored shadow) / `.lp-btn-ghost`, square icon buttons `.lp-sq`,
+  shapes `.lp-shape.circle|square|triangle`, color blocks via `.tone-red|blue|yellow|black` (sets `--tone` / `--on`).
+- Images: `<Pic pic={{ img, alt, tone }}>` shows the photo, or a geometric placeholder until `img` is set.
+  Photos go in `public/landing/`; set the path in `lib/landing.ts`.
+- `<Gallery slides>`: swipeable slider (scroll snap), arrows, shape dots, keyboard arrows, autoplay that pauses.
+- Admin entry is hidden from customers: a "Quản lý" link shows only in a browser signed in to the dashboard,
+  and tapping the logo 5 times opens `/admin`.
