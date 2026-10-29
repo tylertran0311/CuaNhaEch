@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CopyBtn, Money, useErrors, type ViewProps } from "./ui";
 import { Combobox, DatePicker, Select, TimePicker } from "./Pickers";
+import { AddressBox, addrFromLink } from "./AddressBox";
 import type { Dict } from "@/lib/i18n";
 import { formatVN, isVNPhone } from "@/lib/phone";
-import { QUICK_TEMPLATE, parseAddress, parseDate, parseTime, splitReply } from "@/lib/quick";
-import { CITY_ALIAS, EMPTY_ADDR, PROVINCES, capWords, composeAddr, fold, loadGeo, unitKey, type Address, type Geo } from "@/lib/address";
-import { CH, DEPOSITED, IC, KINDS, PAID, SHIPPED, addrOf, byWhen, day, deposit, dueAfterDeposit, isoDate, moveTo, newId, steamFeeFor, stillDue, fd, fdw, kl, short, vnd, type Kind, type Line, type Order, type State, type Unit } from "@/lib/store";
+import { QUICK_TEMPLATE, parseDate, parseTime, splitReply } from "@/lib/quick";
+import { fold, mapLinkIn, mapUrl } from "@/lib/text";
+import { CH, DEPOSITED, IC, KINDS, PAID, SHIPPED, byWhen, day, deposit, dueAfterDeposit, isoDate, moveTo, newId, steamFeeFor, stillDue, fd, fdw, kl, short, vnd, type Kind, type Line, type Order, type State, type Unit } from "@/lib/store";
 
 // When editing, a line starts on its saved snapshot (pid === OLD) so the order keeps the price it was placed at
 interface FormLine { key: number; pid: string; q: string; u: Unit; snap?: { k: Kind; name: string; price: number } }
@@ -130,7 +131,25 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
   const [name, setName] = useState("");
   const [ch, setCh] = useState(CH[0]);
   const [phone, setPhone] = useState("");
-  const [ad, setAd] = useState<Address>(EMPTY_ADDR);
+  const [addr, setAddr] = useState("");
+  const [map, setMap] = useState("");
+  // Address read from the Maps link: filled in when the address is empty, otherwise offered with a button
+  const [linkAddr, setLinkAddr] = useState("");
+  const [linkBusy, setLinkBusy] = useState(false);
+  const linkSeq = useRef(0);
+  const linkRead = useRef("");
+  async function readLink(link: string, fill: boolean) {
+    const id = ++linkSeq.current;
+    linkRead.current = link;
+    setLinkAddr("");
+    if (!mapLinkIn(link)) { setLinkBusy(false); return; }
+    setLinkBusy(true);
+    const a = await addrFromLink(link);
+    if (id !== linkSeq.current) return;
+    setLinkBusy(false);
+    if (a && fill) setAddr(a);
+    else if (a) setLinkAddr(a);
+  }
   const [dDate, setDDate] = useState(() => day(0));
   const [dTime, setDTime] = useState(thisHour);
   const [steam, setSteam] = useState(false);
@@ -166,25 +185,14 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
     return () => clearTimeout(id);
   }, [popId]);
 
-  // Wards (and old districts) of the chosen province, loaded when the province changes
-  const [geo, setGeo] = useState<Geo | null>(null);
-  useEffect(() => {
-    let alive = true;
-    loadGeo(ad.city).then((g) => { if (alive) setGeo(g); });
-    return () => { alive = false; };
-  }, [ad.city]);
-  const cityOpts = useMemo(() => PROVINCES.map((p) => ({ value: p, alias: CITY_ALIAS[p] })), []);
-  const distOpts = useMemo(() => (geo?.d || []).map(([d, o]) => ({ value: d, hint: o || undefined })), [geo]);
-  // With a district picked: its wards. Otherwise the province's current wards (addresses in the new two-level form)
-  const distWards = geo?.d.find(([d]) => unitKey(d) === unitKey(ad.dist))?.[2];
-  const wardOpts = useMemo(() => (ad.dist.trim() ? distWards || [] : geo?.w || []).map((w) => ({ value: w })), [geo, distWards, ad.dist]);
-
   // Past customers, newest order first, with the phone and address they last used
   const custs = useMemo(() => {
     const m = new Map<string, Order>();
     [...s.orders].sort((a, b) => b.id - a.id).forEach((o) => { const k = fold(o.name.trim()); if (k && !m.has(k)) m.set(k, o); });
     return m;
   }, [s.orders]);
+  // Addresses already delivered to, newest first: suggested for free before asking Goong
+  const pastAddrs = useMemo(() => [...new Set([...s.orders].sort((a, b) => b.id - a.id).map((o) => o.addr?.trim() || "").filter(Boolean))], [s.orders]);
   const custOpts = useMemo(() => [...custs.values()].map((o) => ({ value: o.name, hint: o.phone || t.pastCust })), [custs, t]);
   // Quick entry: paste the customer's reply to the template and fill the form from it
   const [qOpen, setQOpen] = useState(false);
@@ -192,7 +200,7 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
   const [qMsg, setQMsg] = useState("");
   const [copied, setCopied] = useState(false);
   const qRef = useRef<HTMLTextAreaElement>(null);
-  async function applyQuick() {
+  function applyQuick() {
     const r = splitReply(qText);
     const done: string[] = [], warn: string[] = [], unread: string[] = [];
     if (r.name) { setName(r.name); done.push(t.name); }
@@ -202,13 +210,11 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
       done.push(t.phone);
       if (!isVNPhone(p)) warn.push(t.quickBadPhone);
     }
-    if (r.addr) {
-      // Load the province's ward list first, so the ward is written exactly as in the list
-      const city = parseAddress(r.addr).city;
-      const g = city ? await loadGeo(city) : null;
-      setAd(parseAddress(r.addr, () => g));
-      done.push(t.addr);
-    }
+    // A Maps link pasted on the address line (or anywhere) goes to the Maps field
+    const link = r.map ? mapLinkIn(r.map) || r.map : mapLinkIn(qText);
+    const a = (r.addr || "").replace(link, "").replace(/\s+/g, " ").trim();
+    if (a) { setAddr(a); done.push(t.addr); }
+    if (link) { setMap(link); done.push(t.mapLbl); readLink(link, !a); }
     // A date or time that can't be read is kept in the note instead of being lost
     if (r.date) { const d = parseDate(r.date); if (d) { setDDate(d); done.push(t.dDate); } else unread.push(`${t.dDate}: ${r.date}`); }
     if (r.time) { const x = parseTime(r.time); if (x) { setDTime(x); done.push(t.dTime); } else unread.push(`${t.dTime}: ${r.time}`); }
@@ -236,7 +242,7 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
     if (c.phone) setPhone(c.phone);
     setCh(c.ch);
     // Fill the address too, unless something was already typed there
-    if (!Object.values(ad).some((v) => v.trim())) setAd(c.ad ? { ...EMPTY_ADDR, ...c.ad } : { ...EMPTY_ADDR, street: c.addr || "" });
+    if (!addr.trim()) { setAddr(c.addr || ""); setMap(c.map || ""); }
   }
 
   function move(id: number, stage: number) {
@@ -292,7 +298,7 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
   }
 
   function resetForm() {
-    setEditId(null); setName(""); setCh(CH[0]); setPhone(""); setAd(EMPTY_ADDR); setDDate(day(0)); setDTime(thisHour()); setSteam(false); setLive(false); setNote(""); setNoteOpen(false); setQMsg(""); setLines([newLine(s)]); setAmt(""); setShip(""); clear();
+    setEditId(null); setName(""); setCh(CH[0]); setPhone(""); setAddr(""); setMap(""); setLinkAddr(""); setLinkBusy(false); linkSeq.current++; setDDate(day(0)); setDTime(thisHour()); setSteam(false); setLive(false); setNote(""); setNoteOpen(false); setQMsg(""); setLines([newLine(s)]); setAmt(""); setShip(""); clear();
   }
 
   function showForm(v: boolean) {
@@ -305,8 +311,9 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
     setName(o.name);
     setCh(o.ch);
     setPhone(o.phone || "");
-    // Older orders only have the one-line address: put it in the street field so nothing is lost
-    setAd(o.ad ? { ...EMPTY_ADDR, ...o.ad } : { ...EMPTY_ADDR, street: o.addr || "" });
+    setAddr(o.addr || "");
+    setMap(o.map || "");
+    setLinkAddr("");
     setDDate(o.dDate || "");
     setDTime(o.dTime || "");
     setSteam(!!o.steam);
@@ -324,7 +331,7 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    const n = name.trim(), contact = { phone: formatVN(phone), addr: composeAddr(ad), ad: { ...ad }, dDate, dTime, steam, live, steamFee: feeNum, note: note.trim() || undefined };
+    const n = name.trim(), contact = { phone: formatVN(phone), addr: addr.trim(), map: map.trim() || undefined, dDate, dTime, steam, live, steamFee: feeNum, note: note.trim() || undefined };
     const ok = check(t, [
       { key: "n", ok: !!n, label: t.name },
       { key: "ph", ok: !contact.phone || isVNPhone(contact.phone), label: t.phone, msg: t.phoneBad },
@@ -340,6 +347,9 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
         // A deposit already received follows the new total (30% of it)
         if (o.dep && o.amt !== amtNum) o.dep = deposit(amtNum);
         Object.assign(o, { name: n, ch, ...contact, amt: amtNum, ship: shipNum });
+        // Address parts from the old form are no longer used
+        delete (o as { ad?: unknown }).ad;
+        if (!o.map) delete o.map;
         if (valid.length) {
           o.lines = valid;
           delete o.crab; delete o.shrimp; delete o.item;
@@ -413,25 +423,27 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
         <Combobox className="a-name" bad={bad.n} placeholder={t.name} value={name} onChange={setName} options={custOpts} onPick={pickCustomer} />
         <input className={bad.ph ? "bad" : ""} type="tel" inputMode="tel" autoComplete="off" placeholder={t.phone}
           value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={() => setPhone(formatVN(phone))} />
-        <fieldset className="adr">
-          <legend>📍 {t.addr}</legend>
-          <input className="a-no" autoComplete="off" placeholder={t.adNo} value={ad.no}
-            onChange={(e) => setAd((a) => ({ ...a, no: e.target.value }))} />
-          {/* Street names are proper names: capitalised when the field is left */}
-          <input className="a-street" autoComplete="off" placeholder={t.adStreet} value={ad.street}
-            onChange={(e) => setAd((a) => ({ ...a, street: e.target.value }))}
-            onBlur={() => setAd((a) => ({ ...a, street: capWords(a.street) }))} />
-          {/* Province → its districts → that district's wards. Short forms ("q.1", "p.tân sơn") snap to the list;
-              anything else can still be typed by hand */}
-          <Combobox className="a-city" placeholder={t.adCity} value={ad.city} options={cityOpts} noMatch={t.noMatch} snap
-            onChange={(v) => setAd((a) => ({ ...a, city: v }))}
-            onPick={(o) => { if (o.value !== ad.city) setAd((a) => ({ ...a, city: o.value, dist: "", ward: "" })); }} />
-          <Combobox className="a-dist" placeholder={t.adDist} value={ad.dist} options={distOpts} noMatch={t.noMatch} snap
-            onChange={(v) => setAd((a) => ({ ...a, dist: v }))}
-            onPick={(o) => { if (o.value !== ad.dist) setAd((a) => ({ ...a, dist: o.value, ward: "" })); }} />
-          <Combobox className="a-ward" placeholder={t.adWard} value={ad.ward} options={wardOpts} noMatch={t.noMatch} snap
-            onChange={(v) => setAd((a) => ({ ...a, ward: v }))} />
-        </fieldset>
+        <AddressBox value={addr} onChange={setAddr} past={pastAddrs} t={t} />
+        <input className="a-map" type="url" inputMode="url" autoComplete="off" placeholder={t.mapPh} value={map}
+          onChange={(e) => {
+            // Read the link as soon as one is pasted (a big jump in length), not on every typed key
+            const v = e.target.value, l = mapLinkIn(v);
+            setMap(v);
+            if (l && v.length - map.length > 8) readLink(l, !addr.trim());
+          }}
+          onBlur={() => {
+            const l = mapLinkIn(map);
+            setMap(l || map.trim());
+            if (l && l !== linkRead.current) readLink(l, !addr.trim());
+          }} />
+        {(linkBusy || (linkAddr && linkAddr !== addr)) && (
+          <div className="lsg" role="status">
+            {linkBusy ? <span>⏳ {t.linkBusy}</span> : <>
+              <span>🗺 {t.linkAddr} <b>{linkAddr}</b></span>
+              <button type="button" className="ghost" onClick={() => { setAddr(linkAddr); setLinkAddr(""); }}>{t.linkUse}</button>
+            </>}
+          </div>
+        )}
         <DatePicker className="dt" label={t.dDate} value={dDate} onChange={setDDate} t={t} clearable />
         <TimePicker className="dt" label={t.dTime} value={dTime} onChange={setDTime} t={t} />
         <div className="opts">
@@ -505,7 +517,13 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
                   <span className="grip" aria-hidden="true">⠿</span>
                   <span className="ch">{o.ch}</span> <b>{o.name}</b>
                   {o.phone && <div className="ci">📞 <a href={`tel:${o.phone.replace(/[^\d+]/g, "")}`}>{o.phone}</a> <CopyBtn text={o.phone} label={t.copyPhone} /></div>}
-                  {addrOf(o) && <div className="ci">📍 {addrOf(o)} <CopyBtn text={addrOf(o)} label={t.copyAddr} /></div>}
+                  {o.addr && <div className="ci">📍 {o.addr} <CopyBtn text={o.addr} label={t.copyAddr} /></div>}
+                  {(o.addr || o.map) && (
+                    <div className="ci">
+                      🗺 <a href={mapUrl(o.map, o.addr || "")} target="_blank" rel="noopener noreferrer">{o.map ? t.mapOpen : t.mapFind}</a>
+                      {o.map && <> <CopyBtn text={o.map} label={t.mapCopy} /></>}
+                    </div>
+                  )}
                   {o.note && <div className="onote">📝 {o.note}</div>}
                   <When o={o} t={t} />
                   <ItemsList o={o} t={t} />

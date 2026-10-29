@@ -1,5 +1,4 @@
 import type { Dict, Lang } from "./i18n";
-import { composeAddr, type Address } from "./address";
 
 export type Kind = "crab" | "shrimp";
 export type Unit = "kg" | "con";
@@ -8,8 +7,8 @@ export interface MenuItem { id: string; k: Kind; name: string; price: number; w:
 export interface Line { k: Kind; name: string; q: number; u: Unit; price: number }
 export interface Order {
   id: number; name: string; ch: string; amt: number; ship: number; stage: number; date: string;
-  // addr is the full one-line address shown on cards; ad holds its parts (missing on older orders)
-  phone?: string; addr?: string; ad?: Address;
+  // One-line delivery address, and the customer's Google Maps link when they sent one
+  phone?: string; addr?: string; map?: string;
   // Delivery day (YYYY-MM-DD) and time (HH:MM)
   dDate?: string; dTime?: string;
   // Steamed order, closed on a livestream, and the steaming fee charged (saved so old orders keep it)
@@ -164,5 +163,3 @@ export function saveLang(l: Lang) {
   try { localStorage.setItem(LK, l); } catch {}
 }
 
-/** One-line delivery address, rebuilt from its parts when the order has them */
-export const addrOf = (o: Order) => (o.ad ? composeAddr(o.ad) : o.addr || "");

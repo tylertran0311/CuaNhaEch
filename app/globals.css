@@ -155,11 +155,6 @@ body{font-size:17px}
 .evs{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}.evs .ev{margin:0}
 @media(max-width:1099px){.cal{grid-template-columns:repeat(2,minmax(0,1fr))}.day{min-height:0}}
 @media(max-width:599px){.cal{grid-template-columns:1fr}}
-.adr{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:10px;border:2px dashed var(--ln);border-radius:14px;padding:6px 10px 10px;margin:0;min-width:0}
-.adr legend{font:800 14px var(--font-baloo),sans-serif;color:var(--mut);padding:0 6px}
-.adr .a-no{flex:1 1 calc(25% - 10px)}.adr .a-street{flex:1 1 75%}
-.adr .a-ward,.adr .a-dist,.adr .a-city{flex:1 1 calc(33.333% - 10px)}
-@media(max-width:600px){.adr .a-ward,.adr .a-dist,.adr .a-city{flex:1 1 100%}}
 /* Sign-in and account */
 .topr{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
 .who{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);font-weight:700;flex-wrap:wrap;justify-content:flex-end}
@@ -191,7 +186,6 @@ body{font-size:17px}
   .ln{flex-wrap:wrap}
   .ln .lp{flex:1 1 100%}
   .ln .u.lq{flex:1 1 0}
-  .adr .a-no{flex:1 1 100%}.adr .a-street{flex:1 1 100%}
   .add>.u:not(.dt){flex:1 1 100%}
   /* Day picker: title on top, controls below */
   .daybar h2{flex:1 1 100%;font-size:20px}
@@ -386,3 +380,9 @@ html,.cb-list{scrollbar-width:thin;scrollbar-color:var(--pk) transparent}
 .cpy.ok{color:var(--grn)}
 /* Bigger tap area on phones without making the icon bigger */
 @media(max-width:600px){.cpy{position:relative}.cpy::after{content:"";position:absolute;inset:-10px}}
+/* One address field (with suggestions) and the customer's Maps link, each on its own row */
+.add>.cb.a-addr{flex:1 1 100%}
+.add>.a-map{flex:1 1 100%;min-width:0}
+/* Address read from the Maps link, offered under the field */
+.add>.lsg{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:-4px;font-size:14px;color:var(--mut);overflow-wrap:anywhere}
+.add>.lsg b{color:var(--ink)}

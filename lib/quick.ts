@@ -1,10 +1,10 @@
 // Quick order entry: read a customer's reply to the order template and split it into the form's fields.
-import { CITY_ALIAS, EMPTY_ADDR, PROVINCES, capWords, fold, unitKey, type Address, type Geo } from "./address";
+import { fold } from "./text";
 
 /** The template sent to customers (always Vietnamese) */
-export const QUICK_TEMPLATE = ["Tên:", "Sđt:", "Địa chỉ:", "Ngày giao:", "Giờ giao:", "Note:"].join("\n");
+export const QUICK_TEMPLATE = ["Tên:", "Sđt:", "Địa chỉ:", "Link Google Maps (nếu có):", "Ngày giao:", "Giờ giao:", "Note:"].join("\n");
 
-export type QuickField = "name" | "phone" | "addr" | "date" | "time" | "note";
+export type QuickField = "name" | "phone" | "addr" | "map" | "date" | "time" | "note";
 export type QuickRaw = Partial<Record<QuickField, string>>;
 
 // Labels customers may use (compared without accents, case or extra spaces)
@@ -12,11 +12,12 @@ const KEYS: [QuickField, RegExp][] = [
   ["name", /^(ten|ho ten|ho va ten|ten khach|ten nguoi nhan|nguoi nhan|name)$/],
   ["phone", /^(sdt|so dt|so dien thoai|dien thoai|dt|phone|sdt nguoi nhan|so dien thoai nguoi nhan)$/],
   ["addr", /^(dia chi|dc|d\/c|dia chi giao|dia chi giao hang|dia chi nhan|dia chi nhan hang|address)$/],
+  ["map", /^(link google maps?|google maps?|link maps?|link ban do|ban do|maps?|vi tri|dinh vi|location|link)( \(neu co\))?$/],
   ["date", /^(ngay giao|ngay nhan|ngay nhan hang|ngay giao hang|ngay|date)$/],
   ["time", /^(gio giao|gio nhan|gio nhan hang|gio giao hang|gio|thoi gian|time)$/],
   ["note", /^(note|ghi chu|luu y|notes|yeu cau)$/],
 ];
-const JOIN: Record<QuickField, string> = { name: " ", phone: " ", addr: ", ", date: " ", time: " ", note: "\n" };
+const JOIN: Record<QuickField, string> = { name: " ", phone: " ", addr: ", ", map: " ", date: " ", time: " ", note: "\n" };
 
 /** Split "Label: value" lines; lines without a known label continue the field above (e.g. a two-line address) */
 export function splitReply(text: string): QuickRaw {
@@ -81,59 +82,4 @@ export function parseTime(s: string): string {
   if (/chieu|toi|dem|\bpm\b/.test(f) && h < 12) h += 12;
   else if (/trua/.test(f) && h < 11) h += 12;
   return h > 23 || mi > 59 ? "" : `${p2(h)}:${p2(mi)}`;
-}
-
-const plain = (s: string) => fold(s).replace(/[.]/g, " ").replace(/\s+/g, " ").trim();
-
-function matchCity(seg: string): string | null {
-  const f = plain(seg);
-  const alias = Object.entries(CITY_ALIAS).find(([, a]) => a.split("|").includes(f));
-  if (alias) return alias[0];
-  const bare = f.replace(/^(tinh|thanh pho|tp)\s+/, "");
-  return PROVINCES.find((p) => plain(p).replace(/^tp\s+/, "") === bare) ?? null;
-}
-const WARD = /^(phuong|xa|thi tran|dac khu)\s|^(p|x|tt)\s*\.|^p\s*\d/;
-const DIST = /^(quan|huyen|thi xa)\s|^(q|h|tx)\s*\.|^q\s*\d/;
-
-/**
- * "47 đường 75, P.Tân Phong, Q.7, TP.HCM" → house no., street, ward, district, province.
- * With the province's lists, short forms become the listed names ("Q.7" → "Quận 7", "p.tân sơn" → "Phường Tân Sơn").
- */
-export function parseAddress(text: string, geoFor?: (city: string) => Geo | null): Address {
-  const ad: Address = { ...EMPTY_ADDR };
-  let segs = text.split(/[,;\n]+/).map((x) => x.trim()).filter(Boolean);
-  for (let i = segs.length - 1; i >= 0; i--) {
-    const c = matchCity(segs[i]);
-    if (c) { ad.city = c; segs.splice(i, 1); break; }
-  }
-  const geo = ad.city && geoFor ? geoFor(ad.city) : null;
-  segs = segs.filter((seg) => {
-    // Prefixes are checked before dots are dropped, so "P.Tân Phong" and "Q.7" are recognised
-    const f = fold(seg).trim(), g = plain(seg);
-    if (!ad.ward && WARD.test(f)) { ad.ward = seg; return false; }
-    if (!ad.dist && (DIST.test(f) || (ad.city && /^(thanh pho|tp)\s/.test(g)))) { ad.dist = seg; return false; }
-    return true;
-  });
-  if (geo) {
-    const d = ad.dist && geo.d.find(([x]) => unitKey(x) === unitKey(ad.dist));
-    if (d) ad.dist = d[0];
-    // Wards of the district when there is one, otherwise the province's current wards
-    const wards = d ? d[2] : geo.w;
-    // A ward written without "Phường"/"Xã" is still recognised when it's in the list
-    if (!ad.ward) {
-      const i = segs.findIndex((seg) => wards.some((w) => unitKey(w) === unitKey(seg)));
-      if (i >= 0) ad.ward = segs.splice(i, 1)[0];
-    }
-    if (ad.ward) ad.ward = wards.find((w) => unitKey(w) === unitKey(ad.ward)) ?? ad.ward;
-  }
-  const [first, ...rest] = segs;
-  if (first) {
-    const m = first.match(/^(\S*\d\S*)\s+(.+)$/);
-    if (m) { ad.no = m[1]; ad.street = m[2]; }
-    else if (/^\S*\d\S*$/.test(first)) ad.no = first;
-    else ad.street = first;
-  }
-  if (rest.length) ad.street = [ad.street, ...rest].filter(Boolean).join(", ");
-  ad.street = capWords(ad.street);
-  return ad;
 }
