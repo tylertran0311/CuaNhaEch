@@ -9,10 +9,9 @@
 import { unstable_cache } from "next/cache";
 import { isMapsHost, readMapsUrl } from "@/lib/maps";
 import { fold } from "@/lib/text";
+import { isMemberRequest } from "@/lib/serverAuth";
 
 const KEY = process.env.GOONG_API_KEY?.trim();
-const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/\/rest\/v1\/?$/, "").replace(/\/+$/, "");
-const SB_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
 const DAILY_MAX = Number(process.env.GOONG_DAILY_MAX) || 300;
 // Results near the shop come first (default: central Hồ Chí Minh City)
 const NEAR = process.env.GOONG_LOCATION?.trim() || "10.7769,106.7009";
@@ -88,25 +87,6 @@ const fromLink = unstable_cache(async (link: string): Promise<string> => {
   return text && a && !bare(a).startsWith(bare(text)) ? `${text}, ${a}` : a;
 }, ["maps-link-v1"], { revalidate: MONTH });
 
-// Tokens already checked against Supabase, so typing doesn't add an auth round trip per keystroke
-const okTokens = new Map<string, number>();
-async function member(req: Request) {
-  if (!SB_URL || !SB_KEY) return process.env.NODE_ENV !== "production";
-  const tok = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-  if (!tok) return false;
-  if ((okTokens.get(tok) ?? 0) > Date.now()) return true;
-  const h = { apikey: SB_KEY, authorization: `Bearer ${tok}` };
-  const r = await fetch(`${SB_URL}/auth/v1/user`, { headers: h, cache: "no-store" });
-  const email = r.ok ? ((await r.json()) as { email?: string }).email : "";
-  if (!email) return false;
-  // Signed in is not enough: the email must be on the shop's members list (same check as the app)
-  const m = await fetch(`${SB_URL}/rest/v1/members?select=email&limit=1&email=ilike.${encodeURIComponent(email)}`, { headers: h, cache: "no-store" });
-  if (!m.ok || !((await m.json()) as unknown[]).length) return false;
-  if (okTokens.size > 200) okTokens.clear();
-  okTokens.set(tok, Date.now() + 10 * 60e3);
-  return true;
-}
-
 const fail = (e: unknown) => {
   const msg = (e as Error).message;
   return Response.json({ items: [], addr: "", error: msg }, { status: msg === "limit" ? 429 : 502 });
@@ -120,7 +100,7 @@ export async function GET(req: Request) {
   // Too short to be worth a paid lookup, or not an address at all
   if (!link && (q.length < 5 || q.length > 120 || !/\p{L}/u.test(q))) return Response.json({ items: [] });
   if (link) { try { if (!isMapsHost(new URL(link))) return Response.json({ addr: "" }); } catch { return Response.json({ addr: "" }); } }
-  if (!(await member(req))) return Response.json({ items: [], addr: "", error: "auth" }, { status: 401 });
+  if (!(await isMemberRequest(req))) return Response.json({ items: [], addr: "", error: "auth" }, { status: 401 });
 
   const cache = { "cache-control": "private, max-age=86400" };
   try {

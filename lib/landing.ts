@@ -27,16 +27,15 @@ export const FEATURES: { title: string; text: string; tone: Tone; shape: "circle
   { title: "Hấp sẵn", text: "Miễn phí hấp khi chốt đơn trên live.", tone: "yellow", shape: "triangle" },
 ];
 
-export interface Product { name: string; size: string; kind: "crab" | "shrimp"; tag?: string; pic: Pic }
-export const PRODUCTS: Product[] = [
-  { name: "Cua Thịt Tứ", size: "4–5 con/kg", kind: "crab", pic: { alt: "Cua Thịt Tứ", tone: "red" } },
-  { name: "Cua Yếm Vuông", size: "5–6 con/kg", kind: "crab", pic: { alt: "Cua Yếm Vuông", tone: "blue" } },
-  { name: "Cua Thịt Y", size: "2–3 con/kg", kind: "crab", tag: "Chắc thịt", pic: { alt: "Cua Thịt Y", tone: "yellow" } },
-  { name: "Cua Gạch", size: "2–3 con/kg", kind: "crab", tag: "Bán chạy", pic: { alt: "Cua Gạch", tone: "black" } },
-  { name: "Tôm Bạc", size: ">100 con/kg", kind: "shrimp", pic: { alt: "Tôm Bạc", tone: "blue" } },
-  { name: "Tôm Thẻ mix Sú", size: "40–50 con/kg", kind: "shrimp", pic: { alt: "Tôm Thẻ mix Sú", tone: "yellow" } },
-  { name: "Tôm Sú 20 con", size: "19–21 con/kg", kind: "shrimp", tag: "Thiên nhiên", pic: { alt: "Tôm Sú", tone: "red" } },
-];
+/**
+ * Products come from the dashboard's menu (names, sizes and prices stay in sync). Here, per menu item name,
+ * an optional tag and photo for the landing page: e.g. "Gạch": { tag: "Bán chạy", img: "/landing/cua-gach.jpg" }.
+ */
+export const PRODUCT_EXTRAS: Record<string, { tag?: string; img?: string }> = {
+  "Thịt Y": { tag: "Chắc thịt" },
+  "Gạch": { tag: "Bán chạy" },
+  "Sú 20 con": { tag: "Thiên nhiên" },
+};
 
 export interface Slide extends Pic { caption: string }
 export const GALLERY: Slide[] = [

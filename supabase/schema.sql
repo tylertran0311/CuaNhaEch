@@ -79,6 +79,16 @@ drop policy if exists "members only" on public.meta;
 create policy "members only" on public.meta
   for all to authenticated using (public.is_member()) with check (public.is_member());
 
+-- Public landing page (/home): anyone may READ the menu (names, sizes, prices) and the day prices were confirmed.
+-- Orders, expenses, customers and members stay private; changing the menu still needs a member.
+drop policy if exists "public read menu" on public.menu_items;
+create policy "public read menu" on public.menu_items
+  for select to anon, authenticated using (true);
+
+drop policy if exists "public read menu date" on public.meta;
+create policy "public read menu date" on public.meta
+  for select to anon, authenticated using (key = 'menu_upd');
+
 -- Live updates: send changes to everyone who has the app open
 do $$
 declare t text;

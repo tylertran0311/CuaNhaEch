@@ -1,7 +1,21 @@
-import { CONTACT, FEATURES, GALLERY, HERO, NOTES, PRODUCTS, STEPS, type Product } from "@/lib/landing";
+import { CONTACT, FEATURES, GALLERY, HERO, NOTES, PRODUCT_EXTRAS, STEPS, type Tone } from "@/lib/landing";
+import type { PublicMenu } from "@/lib/publicMenu";
+import { defMenu, fd, vnd, type Kind, type MenuItem } from "@/lib/store";
 import LandingHeader, { Mark } from "./LandingHeader";
 import Gallery from "./Gallery";
 import Pic from "./Pic";
+import { CrabIcon, ShrimpIcon } from "./Icons";
+
+const TONES: Tone[] = ["red", "blue", "yellow", "black"];
+const KIND_WORD: Record<Kind, string> = { crab: "Cua", shrimp: "Tôm" };
+
+interface Product { key: string; name: string; size: string; price?: number; tag?: string; img?: string; tone: Tone }
+/** A menu item as a product card: "Gạch" → "Cua Gạch", with the extras set in lib/landing.ts */
+function toProduct(i: MenuItem, n: number, withPrice: boolean): Product {
+  const word = KIND_WORD[i.k], extra = PRODUCT_EXTRAS[i.name] || {};
+  const name = i.name.toLowerCase().startsWith(word.toLowerCase()) ? i.name : `${word} ${i.name}`;
+  return { key: i.id, name, size: i.sz, price: withPrice ? i.price : undefined, tag: extra.tag, img: extra.img, tone: TONES[n % TONES.length] };
+}
 
 /** Section title: number block + kicker + big heading */
 function Head({ n, kicker, title, light }: { n: string; kicker: string; title: string; light?: boolean }) {
@@ -18,20 +32,26 @@ function Head({ n, kicker, title, light }: { n: string; kicker: string; title: s
 
 function ProductCard({ p, i }: { p: Product; i: number }) {
   return (
-    <article className={`lp-prod tone-${p.pic.tone}`}>
-      <div className="lp-prod-pic"><Pic pic={p.pic} seed={i + 1} sizes="(min-width: 900px) 25vw, 50vw" /></div>
+    <article className={`lp-prod tone-${p.tone}`}>
+      <div className="lp-prod-pic"><Pic pic={{ img: p.img, alt: p.name, tone: p.tone }} seed={i + 1} sizes="(min-width: 900px) 25vw, 50vw" /></div>
       <div className="lp-prod-body">
         {p.tag && <span className="lp-tag">{p.tag}</span>}
         <h3>{p.name}</h3>
         <p>{p.size}</p>
+        {p.price != null && <p className="lp-price"><b>{vnd(p.price)}</b>/kg</p>}
       </div>
     </article>
   );
 }
 
-/** Public landing page: hero, features, products, gallery, how to order, contact */
-export default function LandingPage() {
-  const crabs = PRODUCTS.filter((p) => p.kind === "crab"), shrimps = PRODUCTS.filter((p) => p.kind === "shrimp");
+/**
+ * Public landing page: hero, features, products, gallery, how to order, contact. Products and prices come from
+ * the dashboard's menu (`menu`); without it (database not reachable) the default menu is shown without prices.
+ */
+export default function LandingPage({ menu }: { menu: PublicMenu | null }) {
+  const items = menu?.items ?? defMenu().items, live = !!menu;
+  const all = items.map((it, n) => ({ it, p: toProduct(it, n, live) }));
+  const crabs = all.filter((x) => x.it.k === "crab").map((x) => x.p), shrimps = all.filter((x) => x.it.k === "shrimp").map((x) => x.p);
   return (
     <div className="lp" id="top">
       <LandingHeader />
@@ -79,11 +99,17 @@ export default function LandingPage() {
         <section className="lp-sec" id="san-pham">
           <div className="lp-wrap">
             <Head n="01" kicker="Sản phẩm" title="Cua & tôm tuyển chọn" />
-            <h3 className="lp-group"><span className="lp-shape circle" aria-hidden="true" />Cua Cà Mau</h3>
-            <div className="lp-grid">{crabs.map((p, i) => <ProductCard key={p.name} p={p} i={i} />)}</div>
-            <h3 className="lp-group"><span className="lp-shape triangle" aria-hidden="true" />Tôm</h3>
-            <div className="lp-grid">{shrimps.map((p, i) => <ProductCard key={p.name} p={p} i={i + crabs.length} />)}</div>
-            <p className="lp-note">Giá thay đổi theo ngày — nhắn shop để nhận giá hôm nay.</p>
+            {crabs.length > 0 && <>
+              <h3 className="lp-group"><CrabIcon />Cua Cà Mau</h3>
+              <div className="lp-grid">{crabs.map((p, i) => <ProductCard key={p.key} p={p} i={i} />)}</div>
+            </>}
+            {shrimps.length > 0 && <>
+              <h3 className="lp-group"><ShrimpIcon />Tôm</h3>
+              <div className="lp-grid">{shrimps.map((p, i) => <ProductCard key={p.key} p={p} i={i + crabs.length} />)}</div>
+            </>}
+            <p className="lp-note">
+              {live && menu.upd ? `Giá ngày ${fd(menu.upd)} · ` : ""}Giá thay đổi theo ngày — nhắn shop để chốt giá hôm nay.
+            </p>
           </div>
         </section>
 

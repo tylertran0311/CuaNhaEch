@@ -88,8 +88,17 @@ export default function Dashboard() {
     fn(next);
     put(next);
     if (supabase) {
-      syncDiff(supabase, prev, next).then(
-        () => setSyncErr(""),
+      const sb = supabase;
+      // Menu or prices changed: once saved, tell the public page (/home) to show them on its next visit
+      const menuChanged = JSON.stringify(prev.menu) !== JSON.stringify(next.menu);
+      syncDiff(sb, prev, next).then(
+        () => {
+          setSyncErr("");
+          if (menuChanged) sb.auth.getSession().then(({ data }) => {
+            const tok = data.session?.access_token;
+            if (tok) fetch("/api/menu-changed", { method: "POST", headers: { authorization: "Bearer " + tok } }).catch(() => {});
+          });
+        },
         (e) => setSyncErr(e instanceof Error ? e.message : String(e?.message ?? e)),
       );
     } else save(next);

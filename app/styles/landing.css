@@ -104,7 +104,9 @@
 .lp-h-n{flex:none;width:64px;height:64px;display:grid;place-items:center;background:var(--bh-yellow);color:var(--bh-black);border:var(--bh-line);font:900 22px var(--font-display),sans-serif}
 .lp-h.light .lp-h-n{border-color:var(--bh-paper)}
 .lp-group{display:flex;align-items:center;gap:12px;margin:32px 0 16px!important;font-size:20px;font-weight:700;text-transform:uppercase}
-.lp-group .lp-shape{width:24px;height:24px}
+.lp-group .lp-icon{width:44px;height:44px;flex:none}
+.lp-price{margin:8px 0 0!important;opacity:1!important;font-size:13px}
+.lp-price b{display:inline-block;padding:1px 6px;margin-right:2px;background:var(--bh-black);color:var(--bh-yellow);font:700 14px var(--font-display),sans-serif}
 .lp-note{margin:28px 0 0;padding:14px 18px;border:var(--bh-line);background:var(--bh-yellow);font-weight:700;max-width:max-content}
 
 /* ---------- Products ---------- */

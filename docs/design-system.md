@@ -91,6 +91,10 @@ circles-squares-triangles, bold uppercase type in **Unbounded** (`--font-display
   shapes `.lp-shape.circle|square|triangle`, color blocks via `.tone-red|blue|yellow|black` (sets `--tone` / `--on`).
 - Images: `<Pic pic={{ img, alt, tone }}>` shows the photo, or a geometric placeholder until `img` is set.
   Photos go in `public/landing/`; set the path in `lib/landing.ts`.
+- Products and prices come from the dashboard's menu (`lib/publicMenu.ts`, cached under the `menu` tag; the
+  dashboard calls `POST /api/menu-changed` after a menu change). Per-item tag/photo: `PRODUCT_EXTRAS` in `lib/landing.ts`.
+  Needs the "public read menu" policies from `supabase/schema.sql`; without them the default menu shows without prices.
+- Icons `<CrabIcon>` / `<ShrimpIcon>` (components/landing/Icons.tsx): built from basic shapes, primary colors only.
 - `<Gallery slides>`: swipeable slider (scroll snap), arrows, shape dots, keyboard arrows, autoplay that pauses.
 - Admin entry is hidden from customers: a "Quản lý" link shows only in a browser signed in to the dashboard,
   and tapping the logo 5 times opens `/admin`.
