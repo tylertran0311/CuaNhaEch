@@ -386,3 +386,34 @@ html,.cb-list{scrollbar-width:thin;scrollbar-color:var(--pk) transparent}
 /* Address read from the Maps link, offered under the field */
 .add>.lsg{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:-4px;font-size:14px;color:var(--mut);overflow-wrap:anywhere}
 .add>.lsg b{color:var(--ink)}
+/* Confirm popup */
+.cfm{padding:0;border:2px solid var(--ink);border-radius:18px;background:var(--wh);color:var(--ink);box-shadow:5px 5px 0 var(--ink);width:min(400px,calc(100vw - 32px));max-width:none;animation:cfm-in .18s ease-out}
+.cfm::backdrop{background:rgba(59,47,92,.38)}
+.cfm-in{padding:18px 20px 16px}
+.cfm h3{margin:0 0 6px;font:800 21px var(--font-baloo),sans-serif;line-height:1.25}
+.cfm-b{font-size:15px;color:var(--mut);overflow-wrap:anywhere}
+.cfm-b b{color:var(--ink)}
+.cfm-acts{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.cfm-acts .ghost{padding:6px 16px;font-size:14px}
+.btn.danger{background:linear-gradient(180deg,#ff8a8a,#e5484d)}
+@keyframes cfm-in{from{opacity:0;transform:translateY(8px) scale(.97)}}
+@media(max-width:600px){.cfm-acts>*{flex:1 1 0}}
+@media(prefers-reduced-motion:reduce){.cfm{animation:none}}
+/* Trash of deleted orders, under the board */
+.trash{margin-top:14px}
+.trash-list{margin-top:10px;background:var(--wh);border:2px dashed var(--ink);border-radius:14px;padding:6px 12px}
+.trash-list .sub{margin:4px 0 6px}
+.trash-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;padding:8px 0;border-top:1.5px dashed var(--ln);overflow-wrap:anywhere}
+.trash-row:first-of-type{border-top:0}
+.trash-info{flex:1 1 220px;min-width:0;font-size:14.5px}
+.trash-info small{color:var(--mut)}
+.trash-acts{display:flex;gap:8px}
+/* "Deleted · Undo" toast, with a bar showing the time left */
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);padding:10px 12px 12px 16px;background:var(--ink);color:var(--wh);border:2px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 rgba(59,47,92,.35);font-weight:700;overflow:hidden;animation:toast-in .2s ease-out}
+.toast span{min-width:0;overflow-wrap:anywhere}
+.toast .ghost{flex:none;background:var(--sun);padding:4px 14px;font-size:14px}
+.toast-bar{position:absolute;left:0;bottom:0;height:4px;width:100%;background:var(--pk);transform-origin:left;animation:toast-bar linear forwards}
+@keyframes toast-in{from{opacity:0;transform:translate(-50%,10px)}}
+@keyframes toast-bar{to{transform:scaleX(0)}}
+@media(max-width:600px){.toast{width:calc(100vw - 32px)}.toast span{flex:1}}
+@media(prefers-reduced-motion:reduce){.toast{animation:none}}

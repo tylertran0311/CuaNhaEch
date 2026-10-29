@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import Background from "./Background";
 import logo from "@/public/logo.png";
@@ -14,7 +14,7 @@ import Login from "./Login";
 import Loader from "./Loader";
 import type { Update } from "./ui";
 import { LANGS, T, type Lang } from "@/lib/i18n";
-import { day, load, loadLang, loadLocalRaw, save, saveLang, type State } from "@/lib/store";
+import { day, load, loadLang, loadLocalRaw, save, saveLang, trashExpired, type State } from "@/lib/store";
 import { supabase } from "@/lib/supabase";
 import { isMember, loadCloud, subscribe, syncDiff } from "@/lib/cloud";
 
@@ -129,6 +129,17 @@ export default function Dashboard() {
     setImporting(false);
   }
 
+  // Orders in the trash are hidden from every tab; the Orders tab lists them separately
+  const view = useMemo(() => s && { ...s, orders: s.orders.filter((o) => !o.delAt) }, [s]);
+  const trash = useMemo(() => (s ? s.orders.filter((o) => o.delAt).sort((a, b) => b.delAt! - a.delAt!) : []), [s]);
+  // Once the data is loaded, orders past their time in the trash are removed for good
+  const purged = useRef(false);
+  useEffect(() => {
+    if (!s || purged.current) return;
+    purged.current = true;
+    if (s.orders.some((o) => trashExpired(o))) update((d) => { d.orders = d.orders.filter((o) => !trashExpired(o)); });
+  }, [s, update]);
+
   const needLogin = !!supabase && session === null;
 
   return (
@@ -165,7 +176,7 @@ export default function Dashboard() {
           <div className="note">{t.loadErr}{loadErr}<button className="ghost" onClick={() => location.reload()}>{t.reload}</button></div>
         )}
 
-        {s && (
+        {s && view && (
           <>
             {syncErr && (
               <div className="note bad-note">{t.syncErr}{syncErr}<button className="ghost" onClick={() => location.reload()}>{t.reload}</button></div>
@@ -183,11 +194,11 @@ export default function Dashboard() {
               ))}
             </nav>
             <div id="view" className="in" key={tab}>
-              {tab === "orders" && <Orders s={s} t={t} update={update} goMenu={() => setTab("menu")} focus={focus} setFocus={setFocus} />}
-              {tab === "cal" && <CalendarView s={s} t={t} update={update} openDay={(d) => { setFocus(d); setTab("orders"); }} />}
-              {tab === "menu" && <MenuView s={s} t={t} update={update} />}
-              {tab === "money" && <MoneyView s={s} t={t} update={update} />}
-              {tab === "cust" && <Customers s={s} t={t} update={update} />}
+              {tab === "orders" && <Orders s={view} trash={trash} t={t} update={update} goMenu={() => setTab("menu")} focus={focus} setFocus={setFocus} />}
+              {tab === "cal" && <CalendarView s={view} t={t} update={update} openDay={(d) => { setFocus(d); setTab("orders"); }} />}
+              {tab === "menu" && <MenuView s={view} t={t} update={update} />}
+              {tab === "money" && <MoneyView s={view} t={t} update={update} />}
+              {tab === "cust" && <Customers s={view} t={t} update={update} />}
             </div>
           </>
         )}

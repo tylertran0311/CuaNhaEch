@@ -14,6 +14,8 @@ export interface Order {
   // Steamed order, closed on a livestream, and the steaming fee charged (saved so old orders keep it)
   steam?: boolean; live?: boolean; steamFee?: number;
   note?: string;
+  // Moved to the trash at this time (ms); purged for good after TRASH_DAYS
+  delAt?: number;
   lines?: Line[];
   // Deposit actually received and the day it came in (unset = not received yet)
   dep?: number; depDate?: string;
@@ -30,6 +32,9 @@ export const PAID = 3;
 export const CH = ["Facebook", "Zalo", "TikTok"];
 export const IC = ["⏳", "✅", "💸", "💖", "🍳", "🚚"];
 export const KINDS: Kind[] = ["crab", "shrimp"];
+/** Deleted orders stay in the trash this long, then are removed for good */
+export const TRASH_DAYS = 7;
+export const trashExpired = (o: Order, now = Date.now()) => !!o.delAt && now - o.delAt > TRASH_DAYS * 864e5;
 
 /** Unique numeric id (time-based + random) so several people adding records at once don't collide */
 export const newId = () => Date.now() * 1000 + Math.floor(Math.random() * 1000);

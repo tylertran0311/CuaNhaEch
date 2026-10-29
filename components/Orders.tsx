@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CopyBtn, Money, useErrors, type ViewProps } from "./ui";
+import { CopyBtn, Money, useConfirm, useErrors, type ViewProps } from "./ui";
 import { Combobox, DatePicker, Select, TimePicker } from "./Pickers";
 import { AddressBox, addrFromLink } from "./AddressBox";
 import type { Dict } from "@/lib/i18n";
 import { formatVN, isVNPhone } from "@/lib/phone";
 import { QUICK_TEMPLATE, parseDate, parseTime, splitReply } from "@/lib/quick";
 import { fold, mapLinkIn, mapUrl } from "@/lib/text";
-import { CH, DEPOSITED, IC, KINDS, PAID, SHIPPED, byWhen, day, deposit, dueAfterDeposit, isoDate, moveTo, newId, steamFeeFor, stillDue, fd, fdw, kl, short, vnd, type Kind, type Line, type Order, type State, type Unit } from "@/lib/store";
+import { CH, DEPOSITED, IC, KINDS, PAID, SHIPPED, TRASH_DAYS, byWhen, day, deposit, dueAfterDeposit, isoDate, moveTo, newId, steamFeeFor, stillDue, fd, fdw, kl, short, vnd, type Kind, type Line, type Order, type State, type Unit } from "@/lib/store";
 
 // When editing, a line starts on its saved snapshot (pid === OLD) so the order keeps the price it was placed at
 interface FormLine { key: number; pid: string; q: string; u: Unit; snap?: { k: Kind; name: string; price: number } }
 const OLD = "__old";
 const FORM_OPEN = "cne-form-open";
+const UNDO_MS = 8000;
 
 let lineKey = 0;
 const newLine = (s: State): FormLine => {
@@ -127,7 +128,15 @@ function useBoardDrag(onDrop: (id: number, stage: number) => void) {
   }, []);
 }
 
-export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewProps & { goMenu: () => void; focus: DayFilter; setFocus: (f: DayFilter) => void }) {
+export default function Orders({ s, trash, t, update, goMenu, focus, setFocus }: ViewProps & { trash: Order[]; goMenu: () => void; focus: DayFilter; setFocus: (f: DayFilter) => void }) {
+  // The order just deleted, offered back for a few seconds
+  const [undo, setUndo] = useState<{ id: number; name: string } | null>(null);
+  useEffect(() => {
+    if (!undo) return;
+    const id = setTimeout(() => setUndo(null), UNDO_MS);
+    return () => clearTimeout(id);
+  }, [undo]);
+  const [trashOpen, setTrashOpen] = useState(false);
   const [name, setName] = useState("");
   const [ch, setCh] = useState(CH[0]);
   const [phone, setPhone] = useState("");
@@ -172,6 +181,7 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
   const [editId, setEditId] = useState<number | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const { bad, err, check, clear } = useErrors();
+  const [confirmNode, ask] = useConfirm();
   const editing = editId == null ? undefined : s.orders.find((o) => o.id === editId);
   // Old orders saved as free text (no lines) can still be edited; their items are kept unless replaced
   const legacy = editing && !editing.lines?.length
@@ -329,7 +339,12 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
   }
 
-  function submit(e: React.FormEvent) {
+  // Which order a confirm popup is about: name, delivery day/time and total
+  const orderLine = (o: { name: string; dDate?: string; dTime?: string; amt: number }) => (
+    <><b>{o.name}</b>{(o.dDate || o.dTime) && <> · {[o.dDate && fdw(t, o.dDate), o.dTime].filter(Boolean).join(" ")}</>} · {vnd(o.amt)}</>
+  );
+
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     const n = name.trim(), contact = { phone: formatVN(phone), addr: addr.trim(), map: map.trim() || undefined, dDate, dTime, steam, live, steamFee: feeNum, note: note.trim() || undefined };
     const ok = check(t, [
@@ -341,6 +356,7 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
     if (!ok) return;
     if (editing) {
       const id = editing.id;
+      if (!(await ask({ title: t.cfEditT, body: <>{t.cfEditB}<br />{orderLine({ name: n, dDate, dTime, amt: amtNum })}</>, ok: t.cfEditOk, cancel: t.cfBack }))) return;
       update((d) => {
         const o = d.orders.find((x) => x.id === id);
         if (!o) return;
@@ -373,13 +389,29 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
   // The day the arrows and date picker step from when showing all or undated orders
   const dayOf = focus === "" || focus === "none" ? day(0) : focus;
 
-  function delOrder(id: number) {
+  async function delOrder(id: number) {
+    const o = s.orders.find((x) => x.id === id);
+    if (!o || !(await ask({ title: t.cfDelT, body: <>{orderLine(o)}<br />{t.cfDelB.replace("{n}", String(TRASH_DAYS))}</>, ok: t.cfDelOk, cancel: t.cfBack, danger: true }))) return;
     if (id === editId) resetForm();
-    update((d) => { d.orders = d.orders.filter((x) => x.id !== id); });
+    // Moved to the trash, not removed: undo right away, or restore from the trash for TRASH_DAYS
+    update((d) => { const x = d.orders.find((y) => y.id === id); if (x) x.delAt = Date.now(); });
+    setUndo({ id, name: o.name });
+  }
+
+  function restore(id: number) {
+    update((d) => { const x = d.orders.find((y) => y.id === id); if (x) delete x.delAt; });
+    setUndo((u) => (u?.id === id ? null : u));
+    setPopId(id);
+  }
+
+  async function purge(o: Order) {
+    if (!(await ask({ title: t.cfPurgeT, body: <>{orderLine(o)}<br />{t.cfPurgeB}</>, ok: t.cfPurgeOk, cancel: t.cfBack, danger: true }))) return;
+    update((d) => { d.orders = d.orders.filter((x) => x.id !== o.id); });
   }
 
   return (
     <>
+      {confirmNode}
       {s.menu.upd !== day(0) && (
         <div className="note">
           <span>{t.stale.replace("{d}", s.menu.upd ? fd(s.menu.upd) : "—")}</span>
@@ -552,6 +584,42 @@ export default function Orders({ s, t, update, goMenu, focus, setFocus }: ViewPr
         })}
       </div>
       <p className="sub" style={{ marginTop: 12 }}>{t.hint}</p>
+
+      {trash.length > 0 && (
+        <div className="trash">
+          <button type="button" className="ghost" aria-expanded={trashOpen} onClick={() => setTrashOpen(!trashOpen)}>
+            🗑 {t.trash} ({trash.length}) {trashOpen ? "▴" : "▾"}
+          </button>
+          {trashOpen && (
+            <div className="trash-list">
+              <p className="sub">{t.trashHint.replace("{n}", String(TRASH_DAYS))}</p>
+              {trash.map((o) => {
+                const left = Math.max(1, Math.ceil(TRASH_DAYS - (Date.now() - o.delAt!) / 864e5));
+                return (
+                  <div className="trash-row" key={o.id}>
+                    <div className="trash-info">
+                      <div>{orderLine(o)}</div>
+                      <small>{t.trashLeft.replace("{n}", String(left))}</small>
+                    </div>
+                    <div className="trash-acts">
+                      <button type="button" className="ghost" onClick={() => restore(o.id)}>↩ {t.restore}</button>
+                      <button type="button" className="ghost" onClick={() => purge(o)}>{t.purge}</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {undo && (
+        <div className="toast" role="status" key={undo.id}>
+          <span>🗑 {t.deleted.replace("{n}", undo.name)}</span>
+          <button type="button" className="ghost" onClick={() => restore(undo.id)}>↩ {t.undo}</button>
+          <i className="toast-bar" style={{ animationDuration: UNDO_MS + "ms" }} />
+        </div>
+      )}
     </>
   );
 }
