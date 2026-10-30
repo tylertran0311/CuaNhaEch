@@ -1,24 +1,14 @@
-import { CONTACT, FEATURES, GALLERY, GUIDE, HERO, NOTES, PRODUCT_EXTRAS, STEPS, TICKER, type Tone } from "@/lib/landing";
+import { CONTACT, FEATURES, GALLERY, GUIDE, HERO, NOTES, STEPS, TICKER, menuProducts, type Product, type Tone } from "@/lib/landing";
 import type { PublicMenu } from "@/lib/publicMenu";
-import { defMenu, fd, vnd, type Kind, type MenuItem } from "@/lib/store";
+import { fd, vnd } from "@/lib/store";
 import LandingHeader, { Mark } from "./LandingHeader";
 import Gallery from "./Gallery";
 import Pic from "./Pic";
 import { CrabIcon, ShrimpIcon } from "./Icons";
 import { ApronIcon, BadgeRing, DeliveryIcon, HeroCrab, PondIcon, SizeDots, SteamIcon } from "./Art";
 
-const TONES: Tone[] = ["red", "blue", "yellow", "black"];
-const KIND_WORD: Record<Kind, string> = { crab: "Cua", shrimp: "Tôm" };
 const FEATURE_ICON = { pond: PondIcon, delivery: DeliveryIcon, steam: SteamIcon };
 const tel = `tel:${CONTACT.phone.replace(/\s/g, "")}`;
-
-interface Product { key: string; name: string; size: string; price?: number; tag?: string; img?: string; tone: Tone }
-/** A menu item as a product card: "Gạch" → "Cua Gạch", with the extras set in lib/landing.ts */
-function toProduct(i: MenuItem, n: number, withPrice: boolean): Product {
-  const word = KIND_WORD[i.k], extra = PRODUCT_EXTRAS[i.name] || {};
-  const name = i.name.toLowerCase().startsWith(word.toLowerCase()) ? i.name : `${word} ${i.name}`;
-  return { key: i.id, name, size: i.sz, price: withPrice ? i.price : undefined, tag: extra.tag, img: extra.img, tone: TONES[n % TONES.length] };
-}
 
 /** Section title: number block + kicker + big heading */
 function Head({ n, kicker, title, light }: { n: string; kicker: string; title: string; light?: boolean }) {
@@ -63,9 +53,7 @@ function ProductCard({ p, i }: { p: Product; i: number }) {
  * crab guide, gallery, how to order, contact, poster footer, and a call/Zalo bar on phones.
  */
 export default function LandingPage({ menu }: { menu: PublicMenu | null }) {
-  const items = menu?.items ?? defMenu().items, live = !!menu;
-  const all = items.map((it, n) => ({ it, p: toProduct(it, n, live) }));
-  const crabs = all.filter((x) => x.it.k === "crab").map((x) => x.p), shrimps = all.filter((x) => x.it.k === "shrimp").map((x) => x.p);
+  const { live, upd, crabs, shrimps } = menuProducts(menu);
   const tick = [...TICKER, ...TICKER];
   return (
     <div className="lp" id="top">
@@ -142,7 +130,7 @@ export default function LandingPage({ menu }: { menu: PublicMenu | null }) {
             </>}
             <p className="lp-note">
               <span className="lp-legend"><SizeDots size="3" /> ít chấm = con to</span>
-              {live && menu.upd ? `Giá ngày ${fd(menu.upd)} · ` : ""}Giá thay đổi theo ngày — nhắn shop để chốt giá hôm nay.
+              {live && upd ? `Giá ngày ${fd(upd)} · ` : ""}Giá thay đổi theo ngày — nhắn shop để chốt giá hôm nay.
             </p>
           </div>
         </section>

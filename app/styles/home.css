@@ -1,0 +1,254 @@
+/*
+ * Public home page (/home): minimal and refined — warm ivory, ink, steamed-crab red, generous space, serif headings,
+ * hairlines instead of boxes, and the food photos doing the talking. Scoped under .hm with the --mn-* tokens.
+ * Mobile first; desktop from 900px.
+ */
+.hm{--pad:20px;background:var(--mn-bg);color:var(--mn-ink);font:400 16px/1.7 var(--font-viet),system-ui,sans-serif;min-height:100vh;overflow-x:clip}
+.hm *{box-sizing:border-box}
+.hm a{color:inherit}
+.hm-wrap{max-width:1200px;margin:0 auto;padding:0 var(--pad)}
+/* Undo the dashboard's cartoon title and tab-bar styles */
+.hm h1,.hm h2,.hm h3{margin:0;color:inherit;-webkit-text-stroke:0;text-shadow:none;transform:none;letter-spacing:0;font-family:var(--font-serif),serif;font-weight:500}
+.hm h1::after{content:none}
+.hm nav{margin:0;gap:0}
+.hm b,.hm strong{font-weight:500}
+.hm :focus-visible{outline:2px solid var(--mn-red);outline-offset:3px}
+.hm-kick{margin:0 0 10px;font:500 11px var(--font-viet),sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--mn-red)}
+
+/* ---------- Buttons and links ---------- */
+.hm-btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 26px;border:1px solid var(--mn-ink);border-radius:999px;background:var(--mn-ink);color:var(--mn-bg)!important;font:500 14px var(--font-viet),sans-serif;letter-spacing:.04em;text-decoration:none;white-space:nowrap;transition:background .2s,color .2s,border-color .2s}
+.hm-btn:hover{background:var(--mn-red);border-color:var(--mn-red)}
+.hm-btn-outline{background:transparent;color:var(--mn-ink)!important}
+.hm-btn-outline:hover{background:var(--mn-ink);color:var(--mn-bg)!important;border-color:var(--mn-ink)}
+.hm-btn-light{background:var(--mn-bg);border-color:var(--mn-bg);color:var(--mn-ink)!important}
+.hm-btn-light:hover{background:var(--white);border-color:var(--white)}
+.hm-btn-ghost{background:transparent;border-color:rgba(250,247,242,.7);color:var(--mn-bg)!important}
+.hm-btn-ghost:hover{background:rgba(250,247,242,.14);border-color:var(--mn-bg)}
+.hm-btn-sm{min-height:38px;padding:0 18px;font-size:13px}
+.hm-link{display:inline-flex;gap:6px;font-weight:500;font-size:14px;text-decoration:none;border-bottom:1px solid var(--mn-line);padding-bottom:2px;transition:border-color .2s,color .2s}
+.hm-link:hover{color:var(--mn-red);border-color:var(--mn-red)}
+
+/* ---------- Strip and header ---------- */
+.hm-strip{margin:0;padding:8px var(--pad);display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;background:var(--mn-ink);color:var(--mn-bg);font-size:12px;letter-spacing:.08em;text-align:center}
+.hm-strip i{font-style:normal;margin-right:10px;opacity:.5}
+/* Phones: one line, the first two notes only */
+@media(max-width:599px){.hm-strip{flex-wrap:nowrap;font-size:11px;letter-spacing:.04em}.hm-strip>span:nth-child(n+3){display:none}}
+.hm-head{position:sticky;top:0;z-index:20;background:rgba(250,247,242,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--mn-line)}
+.hm-head-in{max-width:1200px;margin:0 auto;padding:10px var(--pad);display:flex;align-items:center;gap:12px}
+.hm-brand{display:inline-flex;align-items:center;gap:10px;margin-right:auto;text-decoration:none;white-space:nowrap;-webkit-tap-highlight-color:transparent;user-select:none}
+.hm-logo{height:38px;width:auto;flex:none}
+.hm-word{font:500 20px var(--font-serif),serif}
+.hm-nav{display:none}
+.hm-burger{width:42px;height:42px;display:grid;place-content:center;gap:7px;border:1px solid var(--mn-line);border-radius:50%;background:transparent;cursor:pointer;padding:0}
+.hm-burger i{display:block;width:16px;height:1.5px;background:var(--mn-ink);transition:transform .2s}
+.hm-burger[aria-expanded="true"] i:first-child{transform:translateY(4.25px) rotate(45deg)}
+.hm-burger[aria-expanded="true"] i:last-child{transform:translateY(-4.25px) rotate(-45deg)}
+.hm-nav.open{display:flex;flex-direction:column;position:absolute;left:0;right:0;top:100%;background:var(--mn-bg);border-bottom:1px solid var(--mn-line);padding:6px 0 12px;animation:hm-drop .2s ease-out}
+.hm-nav a{padding:14px var(--pad);font-size:15px;text-decoration:none;border-top:1px solid var(--mn-line)}
+.hm-nav a:first-child{border-top:0}
+.hm-nav .hm-staff{color:var(--mn-red)}
+@keyframes hm-drop{from{opacity:0;transform:translateY(-6px)}}
+@media(max-width:400px){.hm-word{font-size:18px}.hm-logo{height:32px}.hm-head-in{gap:8px}.hm-btn-sm{padding:0 14px}}
+
+/* ---------- Hero: the crabs, full width ---------- */
+/* Phones: short enough that the call/Zalo bar never covers the slide controls */
+.hm-hero{position:relative;height:clamp(460px,calc(100svh - 210px),640px);background:var(--mn-ink);color:var(--mn-bg);overflow:hidden;outline:none}
+.hm-hero-track{position:absolute;inset:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;overscroll-behavior-x:contain}
+.hm-hero-track::-webkit-scrollbar{display:none}
+.hm-slide{position:relative;flex:0 0 100%;margin:0;scroll-snap-align:center}
+.hm-hero-shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(20,18,15,.18) 0%,rgba(20,18,15,0) 30%,rgba(20,18,15,.25) 55%,rgba(20,18,15,.78) 100%)}
+.hm-hero-copy{position:absolute;left:0;right:0;bottom:118px;pointer-events:none}
+.hm-hero-copy a{pointer-events:auto}
+.hm-hero-copy .hm-kick{color:var(--mn-cream)}
+.hm-hero h1{font-size:clamp(38px,9vw,76px);line-height:1.05;font-weight:500}
+.hm-hero h1 span{display:block}
+.hm-hero-sub{margin:16px 0 0;max-width:40ch;font-size:16px;color:rgba(250,247,242,.88)}
+.hm-ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+@media(max-width:479px){.hm-ctas .hm-btn{flex:1 1 100%}}
+.hm-hero-bar{position:absolute;left:0;right:0;bottom:26px;display:grid;grid-template-columns:1fr auto;align-items:end;gap:12px 20px}
+.hm-cap{grid-column:1/-1;margin:0;font-size:13px;color:rgba(250,247,242,.85);letter-spacing:.02em}
+.hm-cap b{margin-right:10px;font:italic 500 15px var(--font-serif),serif;color:var(--mn-cream)}
+.hm-bars{display:flex;gap:6px}
+.hm-bar{flex:1;height:22px;padding:10px 0;border:0;background:none;cursor:pointer}
+.hm-bar i{display:block;height:2px;background:rgba(250,247,242,.85);transform:scaleX(0);transform-origin:left}
+.hm-bar::before{content:"";display:block;height:2px;margin-bottom:-2px;background:rgba(250,247,242,.3)}
+.hm-bar.done i,.hm-bar.on i{transform:scaleX(1)}
+.hm-bar i.run{animation:hm-fill linear forwards}
+@keyframes hm-fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.hm-arrows{display:flex;gap:8px}
+.hm-arrows button{width:42px;height:42px;border-radius:50%;border:1px solid rgba(250,247,242,.55);background:transparent;color:var(--mn-bg);font-size:16px;cursor:pointer;transition:background .2s}
+.hm-arrows button:hover{background:rgba(250,247,242,.15)}
+
+/* ---------- Photos and placeholders ---------- */
+.hm-img{object-fit:cover}
+.hm-ph{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,var(--mn-ph-1) 0%,var(--mn-ph-2) 55%,var(--mn-ph-3) 100%)}
+.hm-hero .hm-ph{background:radial-gradient(circle at 70% 30%,var(--mn-ph-d1) 0%,var(--mn-ph-d2) 50%,var(--mn-ph-d3) 100%)}
+.hm-ph-art{width:min(46%,280px);height:auto;color:rgba(31,28,24,.18)}
+.hm-hero .hm-ph-art{width:min(42%,340px);color:rgba(241,217,184,.22)}
+/* Phones: the placeholder drawing sits above the headline */
+.hm-hero .hm-ph{place-items:start center;padding-top:12%}
+
+/* ---------- Promises ---------- */
+.hm-promise{border-bottom:1px solid var(--mn-line)}
+.hm-promise-in{display:grid;gap:0}
+.hm-pr{display:flex;align-items:flex-start;gap:16px;padding:22px 0;border-top:1px solid var(--mn-line)}
+.hm-pr:first-child{border-top:0}
+.hm-pr-ic{flex:none;width:40px;height:40px;color:var(--mn-red)}
+.hm-pr h3{font-size:19px;margin-bottom:2px}
+.hm-pr p{margin:0;color:var(--mn-mut);font-size:15px}
+
+/* ---------- Sections ---------- */
+.hm-sec{padding:64px 0}
+.hm-sec-alt{background:var(--mn-bg2)}
+.hm-h{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 24px;margin-bottom:34px}
+.hm-h h2{font-size:clamp(30px,7vw,48px);line-height:1.1;text-wrap:balance}
+.hm-h-note{margin:0;max-width:34ch;color:var(--mn-mut);font-size:14px}
+.hm-group{display:flex;align-items:center;gap:12px;margin:34px 0 18px!important;padding-bottom:12px;border-bottom:1px solid var(--mn-line);font-size:22px!important}
+.hm-group:first-of-type{margin-top:0!important}
+.hm-group-ic{width:34px;height:34px;color:var(--mn-red)}
+.hm-group small{margin-left:auto;font:400 12px var(--font-viet),sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mn-mut)}
+
+/* ---------- Products ---------- */
+.hm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px 14px}
+.hm-prod{display:flex;flex-direction:column}
+.hm-prod-pic{position:relative;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:var(--mn-bg2);margin-bottom:14px;box-shadow:var(--mn-shadow)}
+.hm-prod-pic .hm-img{transition:transform .6s ease}
+.hm-prod:hover .hm-img{transform:scale(1.04)}
+.hm-tag{position:absolute;right:10px;bottom:10px;padding:3px 10px;border-radius:999px;background:var(--mn-ink);color:var(--mn-bg);font-size:11px;letter-spacing:.06em}
+.hm-prod h3{font-size:18px;line-height:1.3}
+.hm-price{margin:6px 0 12px;font:600 18px var(--font-viet),sans-serif;color:var(--mn-red)}
+.hm-price-ask{font-size:14px;font-weight:500}
+.hm-each{display:block;margin-top:2px;font-size:13px;font-weight:400;color:var(--mn-mut)}
+.hm-price small{font-size:12px;font-weight:400;color:var(--mn-mut);margin-left:2px}
+.hm-size{margin:2px 0 0;color:var(--mn-mut);font-size:14px}
+.hm-order{margin-top:auto;min-height:42px;width:100%;font-size:14px}
+
+/* ---------- Crab guide ---------- */
+.hm-guide{display:grid;gap:18px}
+.hm-guide-card{display:grid;grid-template-columns:96px 1fr;gap:18px;align-items:center;padding:22px;background:var(--mn-card);border:1px solid var(--mn-line);border-radius:6px}
+.hm-apron{width:100%;height:auto;color:var(--mn-red)}
+.hm-guide-card h3{font-size:24px;margin-bottom:6px}
+.hm-guide-card p{margin:0;color:var(--mn-mut)}
+.hm-guide-card .hm-kick{margin-bottom:4px}
+.hm-tips{list-style:none;margin:26px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;counter-reset:tip}
+.hm-tips li{counter-increment:tip;display:flex;align-items:baseline;gap:10px;padding-top:12px;border-top:1px solid var(--mn-line)}
+.hm-tips li::before{content:counter(tip,decimal-leading-zero);font:italic 500 15px var(--font-serif),serif;color:var(--mn-red)}
+
+/* ---------- Steps ---------- */
+.hm-steps{list-style:none;margin:0;padding:0;display:grid;gap:26px}
+.hm-steps li{padding-top:18px;border-top:1px solid var(--mn-ink)}
+.hm-step-n{display:block;margin-bottom:8px;font:italic 500 40px/1 var(--font-serif),serif;color:var(--mn-red)}
+.hm-steps h3{font-size:22px;margin-bottom:4px}
+.hm-steps p{margin:0;color:var(--mn-mut)}
+
+/* ---------- Contact: compact, title left and details right (stacked on phones) ---------- */
+.hm-contact{padding:56px 0}
+.hm-contact-in{display:grid;gap:26px}
+.hm-contact h2{font-size:clamp(26px,6vw,36px);line-height:1.2;text-wrap:balance}
+.hm-contact-sub{margin:10px 0 0;color:var(--mn-mut);max-width:38ch;font-size:15px;text-wrap:pretty}
+.hm-info{margin:0}
+.hm-info>div{display:grid;grid-template-columns:92px minmax(0,1fr);gap:4px 16px;padding:14px 0;border-top:1px solid var(--mn-line)}
+.hm-info>div:last-child{border-bottom:1px solid var(--mn-line)}
+.hm-info dt{padding-top:3px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mn-mut)}
+.hm-info dd{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;font-size:15px}
+.hm-addr{text-wrap:pretty}
+.hm-addr>span{white-space:nowrap}
+.hm .hm-phone{font:500 22px var(--font-serif),serif;text-decoration:none;color:var(--mn-red)}
+.hm .hm-phone:hover{color:var(--mn-red-dk)}
+.hm-channels{display:flex;flex-wrap:wrap;gap:8px}
+@media(max-width:400px){.hm-info>div{grid-template-columns:1fr}}
+
+/* ---------- Footer and phone dock ---------- */
+.hm-foot{padding:26px 0;border-top:1px solid var(--mn-line);color:var(--mn-mut);font-size:13px}
+.hm-foot-in{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
+.hm-foot .hm-brand{margin:0;color:var(--mn-ink)}
+.hm-dock{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:30;display:grid;grid-template-columns:1fr 1.3fr;gap:8px;padding:6px;border-radius:999px;background:rgba(250,247,242,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 12px 30px -12px rgba(31,28,24,.45);border:1px solid var(--mn-line)}
+.hm-dock a{display:grid;place-items:center;min-height:46px;border-radius:999px;font-weight:500;font-size:15px;text-decoration:none;border:1px solid var(--mn-ink)}
+.hm-dock .hm-dock-main{background:var(--mn-ink);color:var(--mn-bg)!important}
+@media(max-width:899px){.hm-foot{padding-bottom:96px}}
+
+/* ---------- Tablet and desktop ---------- */
+@media(min-width:640px){
+  .hm-promise-in{grid-template-columns:repeat(3,1fr);gap:24px}
+  .hm-pr{border-top:0;padding:30px 0}
+  .hm-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:36px 22px}
+  .hm-guide{grid-template-columns:1fr 1fr}
+  .hm-tips{grid-template-columns:repeat(4,1fr)}
+  .hm-steps{grid-template-columns:repeat(3,1fr);gap:32px}
+}
+@media(min-width:900px){
+  .hm{--pad:40px}
+  .hm-nav{display:flex;align-items:center;gap:4px}
+  .hm-nav a{padding:8px 12px;border:0;font-size:14px}
+  .hm-nav a:hover{color:var(--mn-red)}
+  .hm-nav .hm-staff{margin-left:8px;padding-left:16px;border-left:1px solid var(--mn-line)}
+  .hm-nav.open{position:static;flex-direction:row;padding:0;border:0;animation:none}
+  .hm-burger{display:none}
+  .hm-head-in{gap:22px;padding-top:14px;padding-bottom:14px}
+  .hm-hero{height:min(84svh,760px);min-height:520px}
+  .hm-hero-copy{bottom:150px}
+  .hm-hero-bar{grid-template-columns:auto 1fr auto;align-items:center;bottom:40px}
+  .hm-cap{grid-column:auto;max-width:36ch}
+  .hm-bars{max-width:360px;justify-self:end;width:100%}
+  .hm-sec{padding:104px 0}
+  .hm-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .hm-guide-card{grid-template-columns:130px 1fr;padding:30px}
+  .hm-contact{padding:80px 0}
+  .hm-contact-in{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:64px;align-items:center}
+  .hm-dock{display:none}
+  /* Keep the footer text clear of the floating buttons */
+  .hm-foot-in{padding-right:96px}
+  /* The placeholder drawing sits right of the headline */
+  .hm-hero .hm-ph{place-items:center end;padding:0 10% 0 0}
+}
+
+/* Public pages scroll with a quiet bar, not the dashboard's pink one */
+html:has(.hm),html:has(.lp){scrollbar-color:var(--mn-mut) transparent}
+@supports selector(::-webkit-scrollbar){
+  html:has(.hm)::-webkit-scrollbar-thumb{background:var(--mn-line);border:3px solid var(--mn-bg);box-shadow:none}
+  html:has(.hm)::-webkit-scrollbar-thumb:hover{background:var(--mn-mut)}
+  html:has(.lp)::-webkit-scrollbar-thumb{background:var(--bh-black);border:3px solid var(--bh-paper);border-radius:0;box-shadow:none}
+}
+
+/* ---------- Floating buttons: back to top + Zalo, bottom-right ---------- */
+.hm-fab{position:fixed;right:16px;bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:31;display:flex;flex-direction:column;align-items:center;gap:10px}
+.hm-fab-top,.hm-fab-zalo{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;box-shadow:0 10px 24px -10px rgba(31,28,24,.5);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hm-fab-top{border:1px solid var(--mn-line);background:rgba(250,247,242,.94);color:var(--mn-ink);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;transform:translateY(10px) scale(.9);pointer-events:none;transition:opacity .25s,transform .25s,background .2s}
+.hm-fab-top.on{opacity:1;transform:none;pointer-events:auto}
+.hm-fab-top:hover{background:var(--mn-card)}
+.hm-fab-top svg{width:20px;height:20px}
+/* Phones already have Zalo in the bottom bar */
+.hm-fab-zalo{display:none;position:relative;background:var(--mn-zalo);color:var(--white)!important;text-decoration:none;font:600 13px var(--font-viet),sans-serif;letter-spacing:.02em}
+.hm-fab-zalo::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--mn-zalo);animation:hm-ring 2.4s ease-out infinite}
+@keyframes hm-ring{0%{transform:scale(1);opacity:.6}80%,100%{transform:scale(1.55);opacity:0}}
+@media(min-width:900px){
+  .hm-fab{right:28px;bottom:28px}
+  .hm-fab-top,.hm-fab-zalo{width:54px;height:54px}
+  .hm-fab-zalo{display:grid}
+}
+
+/* ---------- Conversion details ---------- */
+/* Hero price anchor */
+.hm-from{margin:14px 0 0;font-size:14px;color:rgba(250,247,242,.85)}
+.hm-from b{font-weight:600;color:var(--mn-cream)}
+/* After the products: help choosing, with the chat button right there */
+.hm-help{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;margin-top:40px;padding:20px 22px;border:1px solid var(--mn-line);border-radius:8px;background:var(--mn-card)}
+.hm-help p{margin:0;max-width:52ch;text-wrap:pretty}
+.hm-help b{font-weight:500}
+/* Peace of mind: the deposit and steaming rules as three big numbers */
+.hm-policies{display:grid;gap:12px;margin-top:40px}
+.hm-policy{display:flex;align-items:center;gap:16px;padding:18px 20px;background:var(--mn-card);border:1px solid var(--mn-line);border-radius:8px}
+.hm-policy>b{flex:none;min-width:64px;font:italic 500 32px/1 var(--font-serif),serif;color:var(--mn-red)}
+.hm-policy h3{font-size:18px;margin-bottom:2px}
+.hm-policy p{margin:0;color:var(--mn-mut);font-size:14px}
+/* FAQ: native open/close rows */
+.hm-faq{border-top:1px solid var(--mn-line)}
+.hm-faq details{border-bottom:1px solid var(--mn-line)}
+.hm-faq summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;cursor:pointer;list-style:none;font:500 18px/1.4 var(--font-serif),serif}
+.hm-faq summary::-webkit-details-marker{display:none}
+.hm-faq summary::after{content:"+";flex:none;width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--mn-line);border-radius:50%;font:300 18px/1 var(--font-viet),sans-serif;color:var(--mn-red);transition:transform .2s}
+.hm-faq details[open] summary::after{transform:rotate(45deg)}
+.hm-faq details p{margin:0 0 18px;max-width:64ch;color:var(--mn-mut)}
+@media(max-width:599px){.hm-help .hm-btn{width:100%}}
+@media(min-width:640px){.hm-policies{grid-template-columns:repeat(3,1fr)}.hm-policy{flex-direction:column;align-items:flex-start;gap:10px}}
+@media(min-width:900px){.hm-faq-in{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);gap:64px;align-items:start}.hm-faq-in .hm-h{margin:0}}

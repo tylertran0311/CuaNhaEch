@@ -90,6 +90,23 @@
   --bh-shadow:6px 6px 0 var(--bh-black);
   --font-display:"Unbounded";   /* landing headings */
 
+  /* Home page (minimal, refined): warm ivory, ink, steamed-crab red, a touch of gold. Used only under .hm */
+  --mn-bg:#faf7f2;
+  --mn-bg2:#f2ece3;
+  --mn-card:#fffdf9;
+  --mn-ink:#1f1c18;
+  --mn-mut:#766e64;
+  --mn-line:#e4dccf;
+  --mn-red:#a8432a;
+  --mn-red-dk:#8a3520;
+  --mn-gold:#b08d57;
+  --mn-cream:#f1d9b8;  /* warm accent text on photos */
+  --mn-ph-1:#f6efe4;--mn-ph-2:#eadfcd;--mn-ph-3:#dccbb1;     /* photo placeholder, light */
+  --mn-ph-d1:#5b4636;--mn-ph-d2:#3b2d24;--mn-ph-d3:#221a15;  /* photo placeholder, dark (hero) */
+  --mn-shadow:0 22px 44px -28px rgba(31,28,24,.45);
+  --mn-zalo:#0068ff;   /* Zalo blue, so the chat button is recognised at a glance */
+  --font-serif:"Playfair Display";   /* home headings */
+
   /* Layers */
   --z-drag:50;
   --z-pop:60;

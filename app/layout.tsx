@@ -8,9 +8,10 @@ import "./styles/orders.css";
 import "./styles/calendar.css";
 import "./styles/insights.css";
 import "./styles/landing.css";
+import "./styles/home.css";
 
 // Fonts load from Google at runtime (not next/font) so builds don't need to download them
-const FONTS = "https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Paytone+One&family=Unbounded:wght@500;700;900&family=VT323&family=Be+Vietnam+Pro:wght@400;500;700&display=swap";
+const FONTS = "https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Paytone+One&family=Unbounded:wght@500;700;900&family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=VT323&family=Be+Vietnam+Pro:wght@300;400;500;700&display=swap";
 
 export const metadata: Metadata = {
   title: "Cua Nhà Ếch – Shop dashboard",

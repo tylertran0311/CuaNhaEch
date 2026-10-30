@@ -17,8 +17,8 @@ See every component live at **`/admin/kit`**.
    Spacing helpers: `.mt-12`, `.mt-20`; text helpers: `.sub`, `.sub.tight`, `.sg`.
 5. **Mobile first.** Check every change at 375px wide. Phone breakpoint is `max-width:600px`,
    desktop is `min-width:700px`. Forms (`FormCard`) already go full width on phones.
-6. **Class names don't collide across surfaces.** The landing page owns `.lp` and every `lp-*` class (plus
-   `tone-*`); the dashboard never uses them. Prefer descriptive names (`ln-dish`, not two letters).
+6. **Class names don't collide across surfaces.** The home page owns `.hm` / `hm-*`, the Bauhaus page `.lp` / `lp-*`
+   (plus `tone-*`); the dashboard never uses them. Prefer descriptive names (`ln-dish`, not two letters).
 7. **Texts live in `lib/i18n.ts`** (VI and EN), never hard-coded in components.
 
 ## Files
@@ -32,14 +32,16 @@ app/styles/
   orders.css     Orders tab (form layout, board, cards, trash)
   calendar.css   Delivery calendar tab
   insights.css   Money / Customers / Menu tabs (charts, price list)
-  landing.css    public landing page (/home), Bauhaus theme, scoped under .lp
+  home.css       public home page (/home), minimal refined theme, scoped under .hm
+  landing.css    the earlier Bauhaus landing page, kept at /bauhaus, scoped under .lp
 components/
   ui/            UI kit — no business logic, no data
   layout/        app shell pieces (Header, TabBar, Ticker, Loader)
   orders/        order-specific parts (OrderForm, OrderCard, Trash, AddressBox, bits, useBoardDrag)
   views/         one component per tab (OrdersView, CalendarView, MenuView, MoneyView, CustomersView, Login)
-  landing/       public landing page (LandingPage, LandingHeader, Gallery, Pic)
-lib/landing.ts   landing texts, products, gallery slides, contact links — edit content here
+  home/          public home page (HomePage, HomeHeader, HeroSlider, Photo, LineArt)
+  landing/       Bauhaus page (/bauhaus) + logic shared by both public pages (useCarousel, useStaffEntry)
+lib/landing.ts   public page texts, slides, product extras, contact links, menuProducts() — edit content here
   Dashboard.tsx  loads the data, holds the tab state, renders the shell and the current view
 ```
 
@@ -103,3 +105,16 @@ circles-squares-triangles, bold uppercase type in **Unbounded** (`--font-display
 - `<Gallery slides>`: swipeable slider (scroll snap), arrows, shape dots, keyboard arrows, autoplay that pauses.
 - Admin entry is hidden from customers: a "Quản lý" link shows only in a browser signed in to the dashboard,
   and tapping the logo 5 times opens `/admin`.
+
+## Home page theme (minimal, refined) — the live public page
+
+`/home` (the site root redirects there) is light and calm: warm ivory, ink, steamed-crab red and a touch of gold
+(`--mn-*` tokens), serif headings in **Playfair Display** (`--font-serif`), light body text, hairlines instead of boxes.
+**The food is the hero**: it opens on full-width photos of the crabs, then products and today's prices.
+
+- Order of sections: photo slider → promises → products & prices → crab guide → how to order → contact.
+- Photos: `<Photo img alt>` (components/home/Photo.tsx) — real photos of the shop's own crabs only (set `img` in
+  `GALLERY` / `PRODUCT_EXTRAS`); until then a calm line-drawing placeholder marks the spot. Shared with /bauhaus.
+- Drawings: `LineCrab`, `LineShrimp`, `LineApron`, `LinePond`, `LineBox`, `LineSteam` — one thin stroke, current color.
+- Buttons `.hm-btn` (ink pill) / `.hm-btn-outline` / `-light` / `-ghost` (on photos), text links `.hm-link`.
+- Slider logic (`useCarousel`) and the hidden dashboard entry (`useStaffEntry`) are shared with the Bauhaus page.

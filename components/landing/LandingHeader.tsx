@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import logo from "@/public/logo.png";
-import { supabase } from "@/lib/supabase";
+import { useStaffEntry } from "./useStaffEntry";
 
 const NAV = [["#san-pham", "Bảng giá"], ["#chon-cua", "Chọn cua"], ["#thu-vien", "Thư viện"], ["#dat-hang", "Cách đặt"], ["#lien-he", "Liên hệ"]] as const;
 
@@ -14,25 +13,11 @@ export function Mark() {
 }
 
 /**
- * Sticky header. The shop's own way in: a "Quản lý" link appears only in a browser already signed in to the
- * dashboard, and tapping the logo 5 times in a row opens /admin (where the sign-in is). Customers see neither.
+ * Sticky header of the Bauhaus page; the hidden way into the dashboard comes from useStaffEntry.
  */
 export default function LandingHeader() {
-  const router = useRouter();
-  const [staff, setStaff] = useState(false);
+  const { staff, tapLogo } = useStaffEntry();
   const [menu, setMenu] = useState(false);
-  const taps = useRef<number[]>([]);
-
-  useEffect(() => {
-    // Reads the session saved in this browser; no network call, nothing shown when signed out
-    supabase?.auth.getSession().then(({ data }) => setStaff(!!data.session));
-  }, []);
-
-  function tapLogo() {
-    const now = Date.now();
-    taps.current = [...taps.current.filter((t) => now - t < 2500), now];
-    if (taps.current.length >= 5) { taps.current = []; router.push("/admin"); }
-  }
 
   return (
     <header className="lp-head">
