@@ -3,7 +3,8 @@ import { HOME, type Product, type menuProducts } from "@/lib/landing";
 import { fd, vnd } from "@/lib/store";
 import HomeHeader from "./HomeHeader";
 import Head from "./Head";
-import Photo from "./Photo";
+import Gallery from "./Gallery";
+import StockNote from "./StockNote";
 import ProductCard, { perCrab } from "./ProductCard";
 import OrderBox from "./OrderBox";
 import HomeFooter from "./Shell";
@@ -17,7 +18,7 @@ const POINTS = [
 ];
 
 /**
- * One product's page (/san-pham/…), opened from "Đặt món này": big photo, today's price, the note about it, an
+ * One product's page (/san-pham/…), opened from "Đặt món này": its photos, today's stock and price, the note about it, an
  * order box that works out the total for the kilos wanted, then the shop's rules and the other products.
  */
 export default function ProductPage({ product: p, products }: { product: Product; products: ReturnType<typeof menuProducts> }) {
@@ -39,14 +40,12 @@ export default function ProductPage({ product: p, products }: { product: Product
             </nav>
 
             <div className="hm-pd-grid">
-              <div className="hm-pd-pic">
-                <div className="hm-prod-shot"><Photo img={p.img} alt={p.name} art={p.kind} priority sizes="(min-width: 900px) 50vw, 100vw" /></div>
-                {p.tag && <span className="hm-tag">{p.tag}</span>}
-              </div>
+              <Gallery imgs={p.imgs} alt={p.name} art={p.kind} tag={p.tag} />
 
               <div className="hm-pd-info">
                 <p className="hm-kick">{p.info.sub}</p>
                 <h1>{p.name}</h1>
+                <StockNote s={p.stock} className="hm-stock-lg" />
                 <p className="hm-pd-size">{p.size} · bán theo kg</p>
                 {p.price != null
                   ? <p className="hm-pd-price">{vnd(p.price)}<small>/kg</small>{each && <span>{each}</span>}</p>
@@ -59,7 +58,7 @@ export default function ProductPage({ product: p, products }: { product: Product
                   <ul>{p.info.cook.map((c) => <li key={c}>{c}</li>)}</ul>
                 </div>
 
-                <OrderBox name={p.name} size={p.size} price={p.price} />
+                <OrderBox name={p.name} item={p.item} size={p.size} price={p.price} />
 
                 <ul className="hm-pd-points">{POINTS.map((t) => <li key={t}>{t}</li>)}</ul>
               </div>

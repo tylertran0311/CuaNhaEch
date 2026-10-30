@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CONTACT, TEL, piecesPerKg } from "@/lib/landing";
 import { vnd } from "@/lib/store";
+import RequestForm from "./RequestForm";
 
 const STEP = 0.5, MIN = 0.5, MAX = 20;
 const kgText = (kg: number) => String(kg).replace(".", ",") + " kg";
@@ -10,11 +11,13 @@ const kgText = (kg: number) => String(kg).replace(".", ",") + " kg";
 /**
  * Pick how many kilos: shows about how many pieces that is, the total and the 30% deposit. Ordering happens in
  * Zalo, which can't be opened with a message filled in, so the button copies the order message first and says
- * so: the buyer only has to paste it.
+ * so: the buyer only has to paste it. "Đặt giao ngày khác" opens a form that sends the order request straight to the
+ * shop's dashboard instead (`item` is the dish's name on the menu).
  */
-export default function OrderBox({ name, size, price }: { name: string; size: string; price?: number }) {
+export default function OrderBox({ name, item, size, price }: { name: string; item: string; size: string; price?: number }) {
   const [kg, setKg] = useState(1);
   const [copied, setCopied] = useState(false);
+  const [form, setForm] = useState(false);
   const n = piecesPerKg(size);
   const pieces = n && `≈ ${Math.round(n[0] * kg)}–${Math.round(n[1] * kg)} con`;
   const total = price != null ? Math.round(price * kg) : undefined;
@@ -54,6 +57,10 @@ export default function OrderBox({ name, size, price }: { name: string; size: st
       <p className="hm-ob-note" aria-live="polite">
         {copied ? <>Đã chép sẵn tin nhắn — <b>dán vào Zalo</b> để gửi shop.</> : "Tạm tính theo giá hôm nay; shop báo lại tổng khi chốt đơn."}
       </p>
+      <button type="button" className="hm-btn hm-btn-outline hm-ob-later" aria-expanded={form} aria-controls="hm-rq" onClick={() => setForm((x) => !x)}>
+        {form ? "Đóng form đặt" : "Đặt giao ngày khác (điền form)"}
+      </button>
+      {form && <div id="hm-rq"><RequestForm item={item} label={name} kg={kg} /></div>}
     </div>
   );
 }

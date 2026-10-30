@@ -4,6 +4,7 @@
 
 import { defMenu, type Kind, type MenuItem } from "./store";
 import { fold } from "./text";
+import { stockView, vnToday, type Stock, type StockView } from "./stock";
 
 export type Tone = "red" | "blue" | "yellow" | "black";
 export interface Pic { img?: string; alt: string; tone: Tone }
@@ -52,9 +53,10 @@ export interface ProductInfo { sub: string; text: string; cook: string[] }
 /**
  * Products come from the dashboard's menu (names, sizes and prices stay in sync). Here, per menu item name,
  * an optional tag, photo and note for the landing page: e.g. "Gạch": { tag: "Bán chạy", img: "/landing/cua-gach.jpg" }.
+ * `imgs` adds more photos for the product page's gallery (after `img`): imgs: ["/landing/cua-gach-2.jpg", …].
  * A menu item added later without a note gets KIND_INFO's general one.
  */
-const PRODUCT_EXTRAS: Record<string, { tag?: string; img?: string; info?: ProductInfo }> = {
+const PRODUCT_EXTRAS: Record<string, { tag?: string; img?: string; imgs?: string[]; info?: ProductInfo }> = {
   "Thịt Tứ": { info: {
     sub: "Cua đực · cỡ vừa",
     text: "Hàng “tứ” theo cách lựa của dân buôn Cà Mau: 4–5 con một ký, con nào cũng chắc nịch. Gỡ càng ra là thịt trắng ngần, ngọt lịm.",
@@ -138,7 +140,16 @@ export interface Review { name: string; text?: string; img?: string; place?: str
 export const REVIEWS: Review[] = [];
 
 /** A menu item shown as a product on the public pages */
-export interface Product { key: string; slug: string; kind: Kind; name: string; size: string; price?: number; tag?: string; img?: string; info: ProductInfo; tone: Tone }
+export interface Product {
+  key: string; slug: string; kind: Kind; name: string; size: string; price?: number; tag?: string; img?: string;
+  /** The dish's name on the dashboard's menu ("Gạch"); `name` is how the page shows it ("Cua Gạch") */
+  item: string;
+  /** Every photo of the product, the main one first (empty until the shop's photos are set) */
+  imgs: string[];
+  info: ProductInfo; tone: Tone;
+  /** Today's stock (crabs the shop entered this morning), null when there is none for today */
+  stock: StockView | null;
+}
 const TONES: Tone[] = ["red", "blue", "yellow", "black"];
 const KIND_WORD: Record<Kind, string> = { crab: "Cua", shrimp: "Tôm" };
 
@@ -146,12 +157,14 @@ const KIND_WORD: Record<Kind, string> = { crab: "Cua", shrimp: "Tôm" };
  * The menu as products, crabs and shrimps apart: "Gạch" → "Cua Gạch", with PRODUCT_EXTRAS added. `live` is false
  * when the database couldn't be read: then the default menu is used and prices are left out.
  */
-export function menuProducts(menu: { items: MenuItem[]; upd: string } | null) {
-  const live = !!menu, items = menu?.items ?? defMenu().items;
+export function menuProducts(menu: { items: MenuItem[]; upd: string; stock?: Stock } | null) {
+  const live = !!menu, items = menu?.items ?? defMenu().items, today = vnToday();
   const all: Product[] = items.map((i, n) => {
     const word = KIND_WORD[i.k], extra = PRODUCT_EXTRAS[i.name] || {};
     const name = i.name.toLowerCase().startsWith(word.toLowerCase()) ? i.name : `${word} ${i.name}`;
-    return { key: i.id, slug: slugOf(name), kind: i.k, name, size: i.sz, price: live ? i.price : undefined, tag: extra.tag, img: extra.img, info: extra.info ?? KIND_INFO[i.k], tone: TONES[n % TONES.length] };
+    return { key: i.id, slug: slugOf(name), kind: i.k, name, item: i.name, size: i.sz, price: live ? i.price : undefined, tag: extra.tag, img: extra.img,
+      imgs: [extra.img, ...(extra.imgs ?? [])].filter((x): x is string => !!x), info: extra.info ?? KIND_INFO[i.k],
+      tone: TONES[n % TONES.length], stock: i.k === "crab" ? stockView(menu?.stock, i.id, today) : null };
   });
   return { live, upd: menu?.upd ?? "", all, crabs: all.filter((p) => p.kind === "crab"), shrimps: all.filter((p) => p.kind === "shrimp") };
 }

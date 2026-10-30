@@ -2,6 +2,7 @@ import Link from "next/link";
 import { piecesPerKg, type Product } from "@/lib/landing";
 import { vnd } from "@/lib/store";
 import Photo from "./Photo";
+import StockNote from "./StockNote";
 
 /** "≈ 72k–90k/con" from the price per kg and a size like "4-5 con/kg" (crabs only; none for ">100 con/kg") */
 export function perCrab(p: Product) {
@@ -11,7 +12,7 @@ export function perCrab(p: Product) {
   return `≈ ${k(n[1])}–${k(n[0])}/con`;
 }
 
-/** A product in a grid: photo (with its note on hover / tap), name, size, price, and a link to its own page */
+/** A product in a grid: photo (with its note on hover / tap), name, size, today's stock, price, and a link to its own page */
 export default function ProductCard({ p }: { p: Product }) {
   const each = perCrab(p), href = `/san-pham/${p.slug}`;
   return (
@@ -29,6 +30,7 @@ export default function ProductCard({ p }: { p: Product }) {
       </div>
       <h3><Link href={href}>{p.name}</Link></h3>
       <p className="hm-size">{p.size}</p>
+      <StockNote s={p.stock} />
       {p.price != null
         ? <p className="hm-price">{vnd(p.price)}<small>/kg</small>{each && <span className="hm-each">{each}</span>}</p>
         : <p className="hm-price hm-price-ask">Nhắn để có giá hôm nay</p>}

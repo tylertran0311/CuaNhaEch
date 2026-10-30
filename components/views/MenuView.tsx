@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button, FormCard, FormError, Money, Panel, Select, TextInput, UnitInput, useErrors } from "@/components/ui";
 import type { ViewProps } from "./types";
 import { KINDS, day, fd, kl, newId, type Kind } from "@/lib/store";
+import { amountText, stockView, type Amount } from "@/lib/stock";
 
 /** Menu tab: today's prices by kind, adding items, deposit rules */
 export default function MenuView({ s, t, update }: ViewProps) {
@@ -38,8 +39,43 @@ export default function MenuView({ s, t, update }: ViewProps) {
     setNm(""); setSz(""); setPr("");
   }
 
+  // Today's crab stock (entered each morning); a value typed on a new day starts a fresh day
+  const today = day(0), stock = s.stock?.date === today ? s.stock : undefined;
+  function setStock(id: string, field: keyof Amount, v: string) {
+    const n = Math.max(0, +v.replace(",", ".") || 0);
+    update((d) => {
+      if (d.stock?.date !== today) d.stock = { date: today, items: {} };
+      const a = (d.stock.items[id] ??= { kg: 0, pcs: 0 });
+      a[field] = n;
+    });
+  }
+
   return (
     <>
+      <Panel title={t.stockT}>
+        <p className="sub tight">{t.stockHint}</p>
+        <p className="menu-upd"><b>{stock ? t.stockAt + fd(stock.date) : t.stockNone}</b></p>
+        {s.menu.items.filter((i) => i.k === "crab").map((i) => {
+          const set = stock?.items[i.id], v = stockView(stock, i.id, today);
+          return (
+            <div className="mp ms" key={i.id}>
+              <div className="mn">
+                <b>{i.name}</b>
+                <span className="m">{v ? (v.out ? t.stockOut : t.stockLeft + amountText(v, t.stockPcs)) : i.sz}</span>
+              </div>
+              {(["kg", "pcs"] as const).map((f) => (
+                <UnitInput key={f} className="mu" suffix={f === "kg" ? "kg" : t.stockPcs} inputKey={set?.[f] || 0}
+                  inputProps={{
+                    defaultValue: set?.[f] || "", "aria-label": `${i.name} (${f === "kg" ? "kg" : t.stockPcs})`,
+                    onBlur: (e) => { if (e.target.value !== String(set?.[f] || "")) setStock(i.id, f, e.target.value); },
+                    onKeyDown: (e) => { if (e.key === "Enter") e.currentTarget.blur(); },
+                  }} />
+              ))}
+            </div>
+          );
+        })}
+      </Panel>
+
       <Panel title={t.menuT}>
         <p className="sub tight">{t.menuHint}</p>
         <p className="menu-upd"><b>{s.menu.upd ? t.updAt + fd(s.menu.upd) : t.notYet}</b></p>

@@ -1,5 +1,7 @@
 import type { Dict, Lang } from "./i18n";
 import { readLS, writeLS } from "./storage";
+import type { Stock } from "./stock";
+import type { Req } from "./request";
 
 export type Kind = "crab" | "shrimp";
 export type Unit = "kg" | "con";
@@ -24,13 +26,19 @@ export interface Order {
   crab?: string; shrimp?: string; item?: string;
 }
 export interface Expense { id: number; label: string; amt: number; date: string }
-export interface State { orders: Order[]; exp: Expense[]; next: number; v: number; menu: { upd: string; items: MenuItem[] } }
+export interface State {
+  orders: Order[]; exp: Expense[]; next: number; v: number; menu: { upd: string; items: MenuItem[] };
+  /** Today's crab stock, entered each morning in the Menu tab (lib/stock.ts) */
+  stock?: Stock;
+  /** Order requests from the public product page, waiting for the shop (database only) */
+  reqs?: Req[];
+}
 
 const KEY = "cne-dashboard-v1";
 const LK = "cne-lang";
 export const DEPOSITED = 2;
 export const PAID = 3;
-export const CH = ["Facebook", "Zalo", "TikTok"];
+export const CH = ["Facebook", "Zalo", "TikTok", "Website"];
 export const IC = ["⏳", "✅", "💸", "💖", "🍳", "🚚"];
 export const KINDS: Kind[] = ["crab", "shrimp"];
 /** Menu items in kind order (crabs, then shrimps), each kind keeping its own order */

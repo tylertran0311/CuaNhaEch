@@ -6,22 +6,25 @@ import Ticker from "./layout/Ticker";
 import Loader from "./layout/Loader";
 import Header from "./layout/Header";
 import TabBar from "./layout/TabBar";
-import { Button, Note } from "./ui";
+import { Button, Note, Toast } from "./ui";
 import OrdersView, { type DayFilter } from "./views/OrdersView";
 import MenuView from "./views/MenuView";
+import RequestsView from "./views/RequestsView";
 import CalendarView from "./views/CalendarView";
 import MoneyView from "./views/MoneyView";
 import CustomersView from "./views/CustomersView";
 import Login from "./views/Login";
 import type { Update } from "./views/types";
 import { T, type Lang } from "@/lib/i18n";
-import { day, load, loadLang, loadLocalRaw, save, saveLang, trashExpired, type State } from "@/lib/store";
+import { day, fdw, load, loadLang, loadLocalRaw, save, saveLang, trashExpired, type State } from "@/lib/store";
 import { supabase } from "@/lib/supabase";
 import { errMsg, isMember, loadCloud, subscribe, syncDiff } from "@/lib/cloud";
 import { readLS, writeLS } from "@/lib/storage";
+import { stockLeft } from "@/lib/stock";
+import type { Req } from "@/lib/request";
 
-type Tab = "orders" | "cal" | "menu" | "money" | "cust";
-const TABS: Tab[] = ["orders", "cal", "menu", "money", "cust"];
+type Tab = "orders" | "reqs" | "cal" | "menu" | "money" | "cust";
+const TABS: Tab[] = ["orders", "reqs", "cal", "menu", "money", "cust"];
 const IMPORTED = "cne-imported";
 
 export default function Dashboard() {
@@ -88,8 +91,8 @@ export default function Dashboard() {
     put(next);
     if (supabase) {
       const sb = supabase;
-      // Menu or prices changed: once saved, tell the public page (/home) to show them on its next visit
-      const menuChanged = JSON.stringify(prev.menu) !== JSON.stringify(next.menu);
+      // Menu, prices or crab stock changed: once saved, tell the public pages to show them on their next visit
+      const menuChanged = JSON.stringify([prev.menu, prev.stock]) !== JSON.stringify([next.menu, next.stock]);
       syncDiff(sb, prev, next).then(
         () => {
           setSyncErr("");
@@ -148,6 +151,24 @@ export default function Dashboard() {
     if (s.orders.some((o) => trashExpired(o))) update((d) => { d.orders = d.orders.filter((o) => !trashExpired(o)); });
   }, [s, update]);
 
+  // A customer's request just came in (realtime): say so, whichever tab is open. Requests there at load don't count.
+  const seen = useRef<Set<number> | null>(null);
+  const [fresh, setFresh] = useState<Req | null>(null);
+  useEffect(() => {
+    if (!s?.reqs) return;
+    if (!seen.current) { seen.current = new Set(s.reqs.map((r) => r.id)); return; }
+    const added = s.reqs.filter((r) => !seen.current!.has(r.id));
+    added.forEach((r) => seen.current!.add(r.id));
+    if (added.length) setFresh(added[added.length - 1]);
+  }, [s?.reqs]);
+
+  // Today's crab stock: keep "what is left" in step with the day's confirmed orders, so the public pages show it
+  useEffect(() => {
+    if (!s?.stock || s.stock.date !== day(0)) return;
+    const left = stockLeft(s.stock, s.orders, s.menu.items);
+    if (JSON.stringify(left) !== JSON.stringify(s.stock.left)) update((d) => { d.stock!.left = left; });
+  }, [s, update]);
+
   const needLogin = !!supabase && session === null;
 
   return (
@@ -172,14 +193,20 @@ export default function Dashboard() {
                 <Button onClick={dismissImport}>{t.dismiss}</Button>
               </Note>
             )}
-            <TabBar tabs={TABS} labels={t.tabs} value={tab} onChange={setTab} />
+            <TabBar tabs={TABS} labels={t.tabs} value={tab} onChange={setTab} counts={{ reqs: s.reqs?.length }} />
             <div id="view" className="in" key={tab}>
               {tab === "orders" && <OrdersView s={view} trash={trash} t={t} update={update} goMenu={() => setTab("menu")} focus={focus} setFocus={setFocus} />}
+              {tab === "reqs" && <RequestsView s={view} t={t} update={update} db={!!supabase} />}
               {tab === "cal" && <CalendarView s={view} t={t} update={update} openDay={(d) => { setFocus(d); setTab("orders"); }} />}
               {tab === "menu" && <MenuView s={view} t={t} update={update} />}
               {tab === "money" && <MoneyView s={view} t={t} update={update} />}
               {tab === "cust" && <CustomersView s={view} t={t} update={update} />}
             </div>
+            {fresh && (
+              <Toast key={fresh.id} duration={12000} action={t.reqSee} onAction={() => { setTab("reqs"); setFresh(null); }} onDone={() => setFresh(null)}>
+                {t.reqNew}{fresh.name} · {fdw(t, fresh.dDate)} {fresh.dTime}
+              </Toast>
+            )}
           </>
         )}
       </div>

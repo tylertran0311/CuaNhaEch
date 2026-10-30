@@ -38,8 +38,8 @@ components/
   ui/            UI kit — no business logic, no data
   layout/        app shell pieces (Header, TabBar, Ticker, Loader)
   orders/        order-specific parts (OrderForm, OrderCard, Trash, AddressBox, bits, useBoardDrag)
-  views/         one component per tab (OrdersView, CalendarView, MenuView, MoneyView, CustomersView, Login)
-  home/          public pages: HomePage, ProductPage (+ OrderBox), HomeHeader, HeroSlider, ProductCard, Reviews, Shell, Head, Photo, LineArt
+  views/         one component per tab (OrdersView, RequestsView, CalendarView, MenuView, MoneyView, CustomersView, Login)
+  home/          public pages: HomePage, ProductPage (+ OrderBox, RequestForm, Gallery, StockNote), HomeHeader, HeroSlider, ProductCard, Reviews, Shell, Head, Photo, LineArt
   landing/       Bauhaus page (/bauhaus) + logic shared by both public pages (useCarousel, useStaffEntry)
 lib/landing.ts   public page texts, slides, product extras, contact links, menuProducts() — edit content here
   Dashboard.tsx  loads the data, holds the tab state, renders the shell and the current view
@@ -124,10 +124,20 @@ circles-squares-triangles, bold uppercase type in **Unbounded** (`--font-display
 
 - Order of sections, along the buyer's path: photo slider (with today's lowest price) → promises → products & prices
   → customer feedback → how to order & deposit rules → FAQ → crab guide → contact. Sections alternate plain / `.hm-sec-alt`.
-- Product pages `/san-pham/<slug>` (`ProductPage`, address from `slugOf(name)`): opened by "Đặt món này". Photo,
+- Product pages `/san-pham/<slug>` (`ProductPage`, address from `slugOf(name)`): opened by "Đặt món này". Photos
+  (`<Gallery>`: big photo that swipes, arrows, counter, thumbnails; `img` + `imgs` in `PRODUCT_EXTRAS`), stock,
   price, note, `<OrderBox>` (kilos → pieces, total, 30% deposit; the Zalo button copies the order message first),
   the rules, other products. Shared bits: `ProductCard`, `HomeFooter` (footer, floating buttons, phone dock),
   `HomeHeader base="/home"` on pages other than /home.
+- Today's stock (`<StockNote>`, crabs only): the shop enters kg and pieces per crab each morning in the dashboard's
+  Menu tab; orders delivered that day (or placed that day, without a delivery day) from "Đã xác nhận" on come off (kg from kg, "con" from pieces, `lib/stock.ts`).
+  Cards and product pages show "Sẵn sàng giao · còn …" (green check) or "Đã hết hôm nay" (hollow circle), nothing
+  when today's stock isn't entered. Needs the meta `stock` read policy from `supabase/schema.sql`.
+- Order requests: "Đặt giao ngày khác" in `<OrderBox>` opens `<RequestForm>` (name, phone, delivery day today–30 days
+  ahead and time, Google Maps link, note; labels above fields, errors under each). It posts to `/api/requests`;
+  the same checks (`lib/request.ts`) run in the browser, the route (same-site, size, honeypot, timing, rate limit)
+  and the database (`submit_request()`). Requests wait in the dashboard's "Chờ duyệt" tab (number badge, toast when
+  one arrives); confirming one creates an order at "Đã xác nhận" with channel "Website".
 - Product notes: hovering a product photo (tapping it on phones) shows `.hm-peek`, a short note from `info` in
   `PRODUCT_EXTRAS` (or a general one per kind). Keep each note to about two sentences plus three dishes.
 - Customer feedback: `REVIEWS` in `lib/landing.ts` (`<Reviews>`) — real messages only (screenshot and/or words);

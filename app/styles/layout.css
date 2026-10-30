@@ -63,3 +63,5 @@ nav button.on::before{content:"✦ "}
 @keyframes ldshadow{0%,100%{transform:scaleX(1);opacity:1}50%{transform:scaleX(.6);opacity:.5}}
 @keyframes ldwave{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-10px)}}
 @keyframes ldblink{0%,100%{opacity:0}35%{opacity:1}}
+/* Number badge on a tab (requests waiting) */
+.tab-n{display:inline-grid;place-items:center;min-width:22px;height:22px;margin-left:6px;padding:0 6px;border-radius:var(--r-pill);background:var(--ink);color:var(--wh);font-size:13px;line-height:1;vertical-align:2px}

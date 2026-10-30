@@ -1,19 +1,24 @@
 import type { RealtimePostgresChangesPayload, SupabaseClient } from "@supabase/supabase-js";
 import { defMenu, type Expense, type MenuItem, type Order, type State } from "./store";
+import type { Stock } from "./stock";
+import type { Req } from "./request";
 
-// Each record is a row { id, data } in its own table; the menu's "prices confirmed" day lives in meta.
+// Each record is a row { id, data } in its own table; the menu's "prices confirmed" day and today's crab stock live in meta.
 const MENU_UPD = "menu_upd";
+const STOCK = "stock";
 
 type Row = { id: string | number; data: unknown; position?: number };
 
-function rowsToState(orders: Row[], exp: Row[], items: Row[], meta: { key: string; value: unknown }[]): State {
+function rowsToState(orders: Row[], exp: Row[], items: Row[], meta: { key: string; value: unknown }[], reqs?: Row[]): State {
   return {
+    reqs: reqs?.map((r) => ({ ...(r.data as Req), id: Number(r.id) })).sort((a, b) => a.id - b.id),
     orders: orders.map((r) => ({ ...(r.data as Order), id: Number(r.id) })),
     exp: exp.map((r) => ({ ...(r.data as Expense), id: Number(r.id) })),
     menu: {
       upd: (meta.find((m) => m.key === MENU_UPD)?.value as string) || "",
       items: items.slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0)).map((r) => ({ ...(r.data as MenuItem), id: String(r.id) })),
     },
+    stock: (meta.find((m) => m.key === STOCK)?.value as Stock) || undefined,
     next: 1,
     v: 3,
   };
@@ -27,14 +32,16 @@ export async function isMember(sb: SupabaseClient, email: string) {
 }
 
 export async function loadCloud(sb: SupabaseClient): Promise<State> {
-  const [o, e, m, k] = await Promise.all([
+  const [o, e, m, k, q] = await Promise.all([
     sb.from("orders").select("id,data"),
     sb.from("expenses").select("id,data"),
     sb.from("menu_items").select("id,data,position"),
     sb.from("meta").select("key,value"),
+    sb.from("requests").select("id,data"),
   ]);
   for (const r of [o, e, m, k]) if (r.error) throw r.error;
-  const s = rowsToState(o.data!, e.data!, m.data!, k.data!);
+  // Requests need the newer schema.sql; without that table the rest of the dashboard still works
+  const s = rowsToState(o.data!, e.data!, m.data!, k.data!, q.error ? undefined : q.data!);
   // Brand-new database: start with the default menu (no sample orders)
   if (!m.data!.length && !k.data!.length) {
     const fresh = { ...s, menu: defMenu() };
@@ -72,6 +79,11 @@ export async function syncDiff(sb: SupabaseClient, prev: State, next: State) {
   diff("menu_items", prev.menu.items, next.menu.items, true);
   if (prev.menu.upd !== next.menu.upd)
     jobs.push(sb.from("meta").upsert({ key: MENU_UPD, value: next.menu.upd, updated_at: now }));
+  // Requests are only ever removed here (confirmed into an order, or turned down); customers add them
+  const gone = (prev.reqs ?? []).filter((r) => !next.reqs?.some((x) => x.id === r.id)).map((r) => r.id);
+  if (gone.length) jobs.push(sb.from("requests").delete().in("id", gone));
+  if (next.stock && !same(prev.stock, next.stock))
+    jobs.push(sb.from("meta").upsert({ key: STOCK, value: next.stock, updated_at: now }));
 
   const results = await Promise.all(jobs);
   const failed = results.find((r) => r.error);
@@ -105,6 +117,12 @@ function applyChange(s: State, table: string, p: RealtimePostgresChangesPayload<
     }
   } else if (table === "meta" && p.eventType !== "DELETE" && row.key === MENU_UPD) {
     n.menu.upd = (row.value as string) || "";
+  } else if (table === "requests") {
+    const list = n.reqs ?? [];
+    if (p.eventType === "DELETE") n.reqs = list.filter((x) => x.id !== Number(oldId));
+    else n.reqs = upserted(list, { ...(row.data as Req), id: Number(row.id) });
+  } else if (table === "meta" && p.eventType !== "DELETE" && row.key === STOCK) {
+    n.stock = row.value as Stock;
   }
   return n;
 }
@@ -112,7 +130,7 @@ function applyChange(s: State, table: string, p: RealtimePostgresChangesPayload<
 /** Listen for changes made on other devices; returns an unsubscribe function */
 export function subscribe(sb: SupabaseClient, apply: (fn: (s: State) => State) => void) {
   const ch = sb.channel("shop-data");
-  for (const table of ["orders", "expenses", "menu_items", "meta"])
+  for (const table of ["orders", "expenses", "menu_items", "meta", "requests"])
     ch.on("postgres_changes", { event: "*", schema: "public", table }, (p) => apply((s) => applyChange(s, table, p)));
   ch.subscribe();
   return () => { sb.removeChannel(ch); };

@@ -96,3 +96,13 @@
 .trash-info{flex:1 1 220px;min-width:0;font-size:14.5px}
 .trash-info small{color:var(--mut)}
 .trash-acts{display:flex;gap:8px}
+/* Waiting tab: customers' order requests (RequestsView) */
+.rq-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:12px}
+@media(min-width:700px){.rq-list{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}}
+.rq-card{display:grid;gap:6px;padding:14px;background:var(--wh);border:var(--bd);border-radius:var(--r-lg);box-shadow:var(--lift-1)}
+.rq-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px}
+.rq-head b{font-size:17px}
+.rq-head a{font-weight:700;color:var(--ink)}
+.rq-line{margin:0;overflow-wrap:anywhere}
+.rq-note{white-space:pre-line;padding:6px 10px;border:var(--bd-dash);border-radius:var(--r-md)}
+.rq-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
