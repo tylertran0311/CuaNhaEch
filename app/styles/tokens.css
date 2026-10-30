@@ -90,22 +90,85 @@
   --bh-shadow:6px 6px 0 var(--bh-black);
   --font-display:"Unbounded";   /* landing headings */
 
-  /* Home page (minimal, refined): warm ivory, ink, steamed-crab red, a touch of gold. Used only under .hm */
+  /* Home + product pages (minimal seafood): warm ivory and ink, steamed-crab red for prices and actions,
+     Cà Mau mangrove-water green for freshness and trust. Used only under .hm. Light only (no dark mode yet). */
+  /* Colors — surfaces */
   --mn-bg:#faf7f2;
   --mn-bg2:#f2ece3;
   --mn-card:#fffdf9;
+  --mn-glass:rgba(250,247,242,.92);   /* sticky header, dock, floating buttons */
+  /* Colors — text and lines */
   --mn-ink:#1f1c18;
-  --mn-mut:#766e64;
-  --mn-line:#e4dccf;
-  --mn-red:#a8432a;
+  --mn-mut:#6b635a;      /* 5.0:1 on --mn-bg2, 5.6:1 on --mn-bg */
+  --mn-line:#e4dccf;     /* hairlines, decorative only */
+  --mn-line-strong:#cfc4b3;
+  /* Colors — accents */
+  --mn-red:#a8432a;      /* crab red: prices, kickers, focus. 5.1:1 on --mn-bg2 */
   --mn-red-dk:#8a3520;
+  --mn-red-wash:#f6e6df; /* hover tint behind red */
+  --mn-sea:#1d4b4f;      /* mangrove water: freshness marks, the top strip. 8.2:1 on --mn-bg2 */
+  --mn-sea-wash:#e6eeec;
   --mn-gold:#b08d57;
-  --mn-cream:#f1d9b8;  /* warm accent text on photos */
-  --mn-ph-1:#f6efe4;--mn-ph-2:#eadfcd;--mn-ph-3:#dccbb1;     /* photo placeholder, light */
-  --mn-ph-d1:#5b4636;--mn-ph-d2:#3b2d24;--mn-ph-d3:#221a15;  /* photo placeholder, dark (hero) */
-  --mn-shadow:0 22px 44px -28px rgba(31,28,24,.45);
-  --mn-zalo:#0068ff;   /* Zalo blue, so the chat button is recognised at a glance */
+  --mn-cream:#f1d9b8;    /* warm accent text on photos */
+  --mn-zalo:#0068ff;     /* Zalo blue, so the chat button is recognised at a glance. White on it 4.7:1 */
+  /* Colors — on photos (hero) */
+  --mn-on-photo:rgba(250,247,242,.88);
+  --mn-on-photo-line:rgba(250,247,242,.6);
+  --mn-on-photo-track:rgba(250,247,242,.3);
+  --mn-on-photo-hover:rgba(250,247,242,.15);
+  --mn-hero-shade:linear-gradient(180deg,rgba(20,18,15,.18) 0%,rgba(20,18,15,0) 30%,rgba(20,18,15,.25) 55%,rgba(20,18,15,.8) 100%);
+  /* Colors — photo placeholders */
+  --mn-ph-1:#f6efe4;--mn-ph-2:#eadfcd;--mn-ph-3:#dccbb1;     /* light */
+  --mn-ph-d1:#5b4636;--mn-ph-d2:#3b2d24;--mn-ph-d3:#221a15;  /* dark (hero) */
+  --mn-ph-art:rgba(31,28,24,.18);
+  --mn-ph-art-dk:rgba(241,217,184,.22);
+  /* Typography */
   --font-serif:"Playfair Display";   /* home headings */
+  --mn-text-2xs:11px;  /* uppercase labels */
+  --mn-text-xs:12px;
+  --mn-text-sm:13px;
+  --mn-text-md:14px;
+  --mn-text-body-sm:15px;
+  --mn-text-body:16px;
+  --mn-text-lg:18px;
+  --mn-text-xl:20px;
+  --mn-text-2xl:24px;
+  --mn-text-3xl:28px;
+  --mn-text-4xl:32px;
+  --mn-text-5xl:40px;
+  --mn-display-hero:clamp(38px,9vw,76px);
+  --mn-display-page:clamp(34px,8vw,52px);
+  --mn-display-sec:clamp(30px,7vw,48px);
+  --mn-display-sm:clamp(26px,6vw,36px);
+  --mn-lh-tight:1.1;
+  --mn-lh-snug:1.4;
+  --mn-lh-body:1.7;
+  --mn-track-kick:.2em;
+  --mn-track-label:.14em;
+  --mn-track-btn:.04em;
+  /* Spacing (4px steps) */
+  --mn-s-1:4px;--mn-s-2:8px;--mn-s-3:12px;--mn-s-4:16px;--mn-s-5:20px;--mn-s-6:24px;--mn-s-7:28px;--mn-s-8:32px;
+  --mn-s-10:40px;--mn-s-12:48px;--mn-s-14:56px;--mn-s-16:64px;--mn-s-20:80px;--mn-s-24:96px;--mn-s-26:104px;
+  /* Radii */
+  --mn-r-sm:6px;     /* small badges inside cards */
+  --mn-r-md:10px;    /* product photos, notes */
+  --mn-r-lg:14px;    /* cards, order box, big photo */
+  --mn-r-pill:999px;
+  /* Shadows */
+  --mn-shadow-sm:0 1px 2px rgba(31,28,24,.05),0 8px 20px -14px rgba(31,28,24,.3);
+  --mn-shadow:0 22px 44px -28px rgba(31,28,24,.45);
+  --mn-shadow-lg:0 30px 56px -30px rgba(31,28,24,.55);
+  --mn-shadow-float:0 12px 30px -12px rgba(31,28,24,.45);
+  /* Interaction states */
+  --mn-focus:var(--mn-red);
+  --mn-focus-w:2px;
+  --mn-focus-gap:3px;
+  --mn-lift:-3px;                       /* card hover rise */
+  --mn-press:translateY(1px);           /* buttons while pressed */
+  --mn-dur-fast:.15s;
+  --mn-dur:.25s;
+  --mn-dur-slow:.6s;
+  --mn-ease:cubic-bezier(.2,.7,.2,1);
 
   /* Layers */
   --z-drag:50;

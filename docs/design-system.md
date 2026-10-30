@@ -112,6 +112,16 @@ circles-squares-triangles, bold uppercase type in **Unbounded** (`--font-display
 (`--mn-*` tokens), serif headings in **Playfair Display** (`--font-serif`), light body text, hairlines instead of boxes.
 **The food is the hero**: it opens on full-width photos of the crabs, then products and today's prices.
 
+- Two accents with fixed jobs: **crab red** `--mn-red` = prices, totals, kickers, focus ring, button hover;
+  **mangrove green** `--mn-sea` (+ `--mn-sea-wash`) = freshness and trust marks (top strip, promise icons,
+  "Hợp món" chips, ✓ points). Don't swap them.
+- Every value in `home.css` is a token: text `--mn-text-2xs…5xl` + `--mn-display-*`, spacing `--mn-s-1…26` (4px
+  steps), radii `--mn-r-sm|md|lg|pill`, shadows `--mn-shadow-sm|(default)|lg|float`, states `--mn-focus*`,
+  `--mn-lift`, `--mn-press`, `--mn-dur*`, `--mn-ease`, on-photo colors `--mn-on-photo*`, `--mn-glass`.
+- Text contrast is AA: `--mn-mut` is 5.0:1 on `--mn-bg2`; `--mn-line` is for decoration only (use `--mn-line-strong`
+  for dividers people need to see). Tap targets ≥ 44px. `prefers-reduced-motion` turns animations off.
+- Light only (`color-scheme: light`); a dark mode would redefine the `--mn-*` colors, nothing else.
+
 - Order of sections, along the buyer's path: photo slider (with today's lowest price) → promises → products & prices
   → customer feedback → how to order & deposit rules → FAQ → crab guide → contact. Sections alternate plain / `.hm-sec-alt`.
 - Product pages `/san-pham/<slug>` (`ProductPage`, address from `slugOf(name)`): opened by "Đặt món này". Photo,
