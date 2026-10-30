@@ -1,60 +1,21 @@
 import { Fragment } from "react";
-import { CONTACT, GALLERY, GUIDE, HOME, STEPS, menuProducts, type Product } from "@/lib/landing";
+import { CONTACT, GALLERY, GUIDE, HOME, REVIEWS, STEPS, TEL as tel, menuProducts } from "@/lib/landing";
 import type { PublicMenu } from "@/lib/publicMenu";
-import { fd, vnd } from "@/lib/store";
+import { fd } from "@/lib/store";
 import { mapUrl } from "@/lib/text";
-import HomeHeader, { Brand } from "./HomeHeader";
+import HomeHeader from "./HomeHeader";
 import HeroSlider from "./HeroSlider";
-import FloatingActions from "./FloatingActions";
-import Photo from "./Photo";
+import Head from "./Head";
+import Reviews from "./Reviews";
+import ProductCard from "./ProductCard";
+import HomeFooter, { zaloLink as zalo } from "./Shell";
 import { LineApron, LineBox, LineCrab, LinePond, LineShrimp, LineSteam } from "./LineArt";
 
 const PROMISE_ICON = { pond: LinePond, box: LineBox, steam: LineSteam };
-const tel = `tel:${CONTACT.phone.replace(/\s/g, "")}`;
-const zalo = { href: CONTACT.zalo, target: "_blank", rel: "noopener noreferrer" } as const;
-
-/** "≈ 72k–90k/con" from the price per kg and a size like "4-5 con/kg" (crabs only; none for ">100 con/kg") */
-function perCrab(p: Product) {
-  const m = p.size.match(/^\s*(\d+)\s*[-–]\s*(\d+)/);
-  if (p.kind !== "crab" || p.price == null || !m) return "";
-  const k = (n: number) => Math.round(p.price! / n / 1000) + "k";
-  return `≈ ${k(+m[2])}–${k(+m[1])}/con`;
-}
-
-/** Section heading: small kicker, serif title, optional note on the right */
-function Head({ kicker, title, note }: { kicker: string; title: string; note?: string }) {
-  return (
-    <div className="hm-h">
-      <div>
-        <p className="hm-kick">{kicker}</p>
-        <h2>{title}</h2>
-      </div>
-      {note && <p className="hm-h-note">{note}</p>}
-    </div>
-  );
-}
-
-function ProductCard({ p }: { p: Product }) {
-  const each = perCrab(p);
-  return (
-    <article className="hm-prod">
-      <div className="hm-prod-pic">
-        <Photo img={p.img} alt={p.name} art={p.kind} sizes="(min-width: 900px) 25vw, 50vw" />
-        {p.tag && <span className="hm-tag">{p.tag}</span>}
-      </div>
-      <h3>{p.name}</h3>
-      <p className="hm-size">{p.size}</p>
-      {p.price != null
-        ? <p className="hm-price">{vnd(p.price)}<small>/kg</small>{each && <span className="hm-each">{each}</span>}</p>
-        : <p className="hm-price hm-price-ask">Nhắn để có giá hôm nay</p>}
-      <a className="hm-btn hm-btn-outline hm-order" {...zalo}>{p.price != null ? "Đặt món này" : "Hỏi giá"}</a>
-    </article>
-  );
-}
 
 /**
  * Public home page, minimal and refined, laid out along the buyer's path: see the crabs (photos) → see the price
- * → know how to order → feel safe (rules, FAQ) → learn to choose → contact. Prices come live from the dashboard's menu.
+ * → see what other buyers say → know how to order → feel safe (rules, FAQ) → learn to choose → contact. Prices come live from the dashboard's menu.
  * The Bauhaus version is at /bauhaus.
  */
 export default function HomePage({ menu }: { menu: PublicMenu | null }) {
@@ -104,8 +65,10 @@ export default function HomePage({ menu }: { menu: PublicMenu | null }) {
           </div>
         </section>
 
+        <Reviews reviews={REVIEWS} />
+
         {/* How to order + peace of mind */}
-        <section className="hm-sec hm-sec-alt" id="dat-hang">
+        <section className="hm-sec" id="dat-hang">
           <div className="hm-wrap">
             <Head kicker="Cách đặt" title="Ba bước là có cua" />
             <ol className="hm-steps">
@@ -129,7 +92,7 @@ export default function HomePage({ menu }: { menu: PublicMenu | null }) {
         </section>
 
         {/* FAQ: the questions that stop people ordering, answered before they ask */}
-        <section className="hm-sec" id="hoi-dap">
+        <section className="hm-sec hm-sec-alt" id="hoi-dap">
           <div className="hm-wrap hm-faq-in">
             <Head kicker="Hỏi đáp" title="Trước khi đặt cua" />
             <div className="hm-faq">
@@ -144,7 +107,7 @@ export default function HomePage({ menu }: { menu: PublicMenu | null }) {
         </section>
 
         {/* Crab guide */}
-        <section className="hm-sec hm-sec-alt" id="chon-cua">
+        <section className="hm-sec" id="chon-cua">
           <div className="hm-wrap">
             <Head kicker="Bí kíp" title={GUIDE.title} />
             <div className="hm-guide">
@@ -210,20 +173,7 @@ export default function HomePage({ menu }: { menu: PublicMenu | null }) {
         </section>
       </main>
 
-      <footer className="hm-foot">
-        <div className="hm-wrap hm-foot-in">
-          <span className="hm-brand"><Brand /></span>
-          <span>© {new Date().getFullYear()} Cua Nhà Ếch · Cua Năm Căn – Cà Mau</span>
-        </div>
-      </footer>
-
-      <FloatingActions />
-
-      {/* Phones: call / Zalo always at hand */}
-      <div className="hm-dock">
-        <a href={tel}>Gọi ngay</a>
-        <a {...zalo} className="hm-dock-main">Nhắn Zalo đặt cua</a>
-      </div>
+      <HomeFooter />
     </div>
   );
 }

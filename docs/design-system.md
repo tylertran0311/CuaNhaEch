@@ -39,7 +39,7 @@ components/
   layout/        app shell pieces (Header, TabBar, Ticker, Loader)
   orders/        order-specific parts (OrderForm, OrderCard, Trash, AddressBox, bits, useBoardDrag)
   views/         one component per tab (OrdersView, CalendarView, MenuView, MoneyView, CustomersView, Login)
-  home/          public home page (HomePage, HomeHeader, HeroSlider, Photo, LineArt)
+  home/          public pages: HomePage, ProductPage (+ OrderBox), HomeHeader, HeroSlider, ProductCard, Reviews, Shell, Head, Photo, LineArt
   landing/       Bauhaus page (/bauhaus) + logic shared by both public pages (useCarousel, useStaffEntry)
 lib/landing.ts   public page texts, slides, product extras, contact links, menuProducts() — edit content here
   Dashboard.tsx  loads the data, holds the tab state, renders the shell and the current view
@@ -112,7 +112,16 @@ circles-squares-triangles, bold uppercase type in **Unbounded** (`--font-display
 (`--mn-*` tokens), serif headings in **Playfair Display** (`--font-serif`), light body text, hairlines instead of boxes.
 **The food is the hero**: it opens on full-width photos of the crabs, then products and today's prices.
 
-- Order of sections: photo slider → promises → products & prices → crab guide → how to order → contact.
+- Order of sections, along the buyer's path: photo slider (with today's lowest price) → promises → products & prices
+  → customer feedback → how to order & deposit rules → FAQ → crab guide → contact. Sections alternate plain / `.hm-sec-alt`.
+- Product pages `/san-pham/<slug>` (`ProductPage`, address from `slugOf(name)`): opened by "Đặt món này". Photo,
+  price, note, `<OrderBox>` (kilos → pieces, total, 30% deposit; the Zalo button copies the order message first),
+  the rules, other products. Shared bits: `ProductCard`, `HomeFooter` (footer, floating buttons, phone dock),
+  `HomeHeader base="/home"` on pages other than /home.
+- Product notes: hovering a product photo (tapping it on phones) shows `.hm-peek`, a short note from `info` in
+  `PRODUCT_EXTRAS` (or a general one per kind). Keep each note to about two sentences plus three dishes.
+- Customer feedback: `REVIEWS` in `lib/landing.ts` (`<Reviews>`) — real messages only (screenshot and/or words);
+  empty, it links to the shop's TikTok and Facebook instead. Swipe row on phones, masonry columns on desktop.
 - Photos: `<Photo img alt>` (components/home/Photo.tsx) — real photos of the shop's own crabs only (set `img` in
   `GALLERY` / `PRODUCT_EXTRAS`); until then a calm line-drawing placeholder marks the spot. Shared with /bauhaus.
 - Drawings: `LineCrab`, `LineShrimp`, `LineApron`, `LinePond`, `LineBox`, `LineSteam` — one thin stroke, current color.
