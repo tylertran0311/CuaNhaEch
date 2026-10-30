@@ -7,7 +7,7 @@ const MOBILE = /^0(3[2-9]|5[25689]|7[06-9]|8[1-9]|9\d)\d{7}$/;
 const LANDLINE = /^02\d{9}$/;
 
 /** Drop spaces, dots, dashes and brackets, and turn +84 / 84 into a leading 0 */
-export function normalizeVN(s: string) {
+function normalizeVN(s: string) {
   let d = s.replace(/[\s.\-()]/g, "");
   if (d.startsWith("+84")) d = "0" + d.slice(3);
   else if (/^84\d{9,10}$/.test(d)) d = "0" + d.slice(2);

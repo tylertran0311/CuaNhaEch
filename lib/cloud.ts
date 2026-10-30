@@ -46,6 +46,10 @@ export async function loadCloud(sb: SupabaseClient): Promise<State> {
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
+/** Readable message from anything thrown: an Error, a Supabase error object ({ message }), or a plain value */
+export const errMsg = (e: unknown) =>
+  e instanceof Error ? e.message : String((e as { message?: unknown } | null)?.message ?? e);
+
 /** Write only what changed between two states: upsert changed/new records, delete removed ones */
 export async function syncDiff(sb: SupabaseClient, prev: State, next: State) {
   const now = new Date().toISOString();
@@ -74,21 +78,24 @@ export async function syncDiff(sb: SupabaseClient, prev: State, next: State) {
   if (failed) throw failed.error;
 }
 
-/** Apply one realtime change (from anyone, including our own writes) to a state copy */
+/**
+ * Apply one realtime change (from anyone, including our own writes). Returns a new state that shares every
+ * record the change didn't touch: only the changed list is copied, not the whole shop's data.
+ */
 function applyChange(s: State, table: string, p: RealtimePostgresChangesPayload<Record<string, unknown>>): State {
-  const n = structuredClone(s);
+  const n: State = { ...s, menu: { ...s.menu } };
   const row = p.new as Row & { key?: string; value?: unknown };
   const oldId = (p.old as { id?: string | number; key?: string })?.id;
-  const upsertInto = <T extends { id: string | number }>(list: T[], item: T) => {
+  const upserted = <T extends { id: string | number }>(list: T[], item: T) => {
     const i = list.findIndex((x) => x.id === item.id);
-    if (i >= 0) list[i] = item; else list.push(item);
+    return i >= 0 ? list.with(i, item) : [...list, item];
   };
   if (table === "orders") {
     if (p.eventType === "DELETE") n.orders = n.orders.filter((x) => x.id !== Number(oldId));
-    else upsertInto(n.orders, { ...(row.data as Order), id: Number(row.id) });
+    else n.orders = upserted(n.orders, { ...(row.data as Order), id: Number(row.id) });
   } else if (table === "expenses") {
     if (p.eventType === "DELETE") n.exp = n.exp.filter((x) => x.id !== Number(oldId));
-    else upsertInto(n.exp, { ...(row.data as Expense), id: Number(row.id) });
+    else n.exp = upserted(n.exp, { ...(row.data as Expense), id: Number(row.id) });
   } else if (table === "menu_items") {
     if (p.eventType === "DELETE") n.menu.items = n.menu.items.filter((x) => x.id !== String(oldId));
     else {

@@ -54,7 +54,7 @@ export interface ProductInfo { sub: string; text: string; cook: string[] }
  * an optional tag, photo and note for the landing page: e.g. "Gạch": { tag: "Bán chạy", img: "/landing/cua-gach.jpg" }.
  * A menu item added later without a note gets KIND_INFO's general one.
  */
-export const PRODUCT_EXTRAS: Record<string, { tag?: string; img?: string; info?: ProductInfo }> = {
+const PRODUCT_EXTRAS: Record<string, { tag?: string; img?: string; info?: ProductInfo }> = {
   "Thịt Tứ": { info: {
     sub: "Cua đực · cỡ vừa",
     text: "Hàng “tứ” theo cách lựa của dân buôn Cà Mau: 4–5 con một ký, con nào cũng chắc nịch. Gỡ càng ra là thịt trắng ngần, ngọt lịm.",
@@ -157,7 +157,7 @@ export function menuProducts(menu: { items: MenuItem[]; upd: string } | null) {
 }
 
 /** The product's address under /san-pham: "Cua Thịt Tứ" → "cua-thit-tu" */
-export const slugOf = (name: string) => fold(name).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const slugOf = (name: string) => fold(name).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 /** How many pieces in a kg, from a size like "4-5 con/kg" → [4, 5]; null for sizes like ">100 con/kg" */
 export function piecesPerKg(size: string): [number, number] | null {

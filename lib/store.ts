@@ -1,4 +1,5 @@
 import type { Dict, Lang } from "./i18n";
+import { readLS, writeLS } from "./storage";
 
 export type Kind = "crab" | "shrimp";
 export type Unit = "kg" | "con";
@@ -25,13 +26,15 @@ export interface Order {
 export interface Expense { id: number; label: string; amt: number; date: string }
 export interface State { orders: Order[]; exp: Expense[]; next: number; v: number; menu: { upd: string; items: MenuItem[] } }
 
-export const KEY = "cne-dashboard-v1";
-export const LK = "cne-lang";
+const KEY = "cne-dashboard-v1";
+const LK = "cne-lang";
 export const DEPOSITED = 2;
 export const PAID = 3;
 export const CH = ["Facebook", "Zalo", "TikTok"];
 export const IC = ["⏳", "✅", "💸", "💖", "🍳", "🚚"];
 export const KINDS: Kind[] = ["crab", "shrimp"];
+/** Menu items in kind order (crabs, then shrimps), each kind keeping its own order */
+export const byKind = (items: MenuItem[]) => KINDS.flatMap((k) => items.filter((i) => i.k === k));
 /** Deleted orders stay in the trash this long, then are removed for good */
 export const TRASH_DAYS = 7;
 export const trashExpired = (o: Order, now = Date.now()) => !!o.delAt && now - o.delAt > TRASH_DAYS * 864e5;
@@ -47,21 +50,24 @@ export function day(n: number) {
   return isoDate(d);
 }
 /** Sort key: earliest delivery first, no time after timed ones that day, no date last */
-export const whenKey = (o: Order) => (o.dDate ? o.dDate + " " + (o.dTime || "99:99") : "~");
-export const byWhen = (a: Order, b: Order) => (whenKey(a) < whenKey(b) ? -1 : whenKey(a) > whenKey(b) ? 1 : 0);
+const whenKey = (o: Order) => (o.dDate ? o.dDate + " " + (o.dTime || "99:99") : "~");
+export const byWhen = (a: Order, b: Order) => {
+  const x = whenKey(a), y = whenKey(b);
+  return x < y ? -1 : x > y ? 1 : 0;
+};
 export const SHIPPED = 5;
 export const fd = (d: string) => d.slice(8) + "/" + d.slice(5, 7);
 /** "T4 29/10" — weekday plus day/month */
 export const fdw = (t: Dict, d: string) => t.wd[new Date(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8)).getDay()] + " " + fd(d);
 export const vnd = (n: number) => Math.round(n).toLocaleString("vi-VN") + " ₫";
 export const short = (n: number) => (n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : Math.round(n / 1e3) + "k");
-export const DEP = 0.3;
+const DEP = 0.3;
 /** 30% deposit on the goods total (not shipping), rounded to the nearest 1,000 ₫ */
 export const deposit = (amt: number) => Math.round((amt * DEP) / 1000) * 1000;
 /** What is left to collect after the deposit: rest of the goods plus shipping */
 export const dueAfterDeposit = (amt: number, ship: number, fee = 0) => amt - deposit(amt) + fee + ship;
 /** Steaming is free when the order was closed on a livestream, otherwise +10,000 ₫ */
-export const STEAM_FEE = 10000;
+const STEAM_FEE = 10000;
 export const steamFeeFor = (steam: boolean, live: boolean) => (steam && !live ? STEAM_FEE : 0);
 /** What the shop earns from an order: goods plus steaming fee (shipping is passed on) */
 export const orderTotal = (o: Order) => o.amt + (o.steamFee || 0);
@@ -76,7 +82,7 @@ export function moveTo(o: Order, stage: number) {
   if (stage >= DEPOSITED && !o.dep) { o.dep = deposit(o.amt); o.depDate = day(0); }
   if (stage < DEPOSITED) { delete o.dep; delete o.depDate; }
 }
-export const kl =(t: Dict, k: Kind) => (k === "crab" ? t.kCrab : t.kShrimp);
+export const kl = (t: Dict, k: Kind) => (k === "crab" ? t.kCrab : t.kShrimp);
 
 export function months() {
   const a: string[] = [], d = new Date();
@@ -125,7 +131,7 @@ function sample(): State {
 /** Data saved in this browser (before the database), or null if there is none */
 export function loadLocalRaw(): State | null {
   try {
-    const s = JSON.parse(localStorage.getItem(KEY) || "null");
+    const s = JSON.parse(readLS(KEY) || "null");
     return s && s.orders ? migrate(s) : null;
   } catch { return null; }
 }
@@ -153,18 +159,15 @@ function migrate(s: State): State {
 }
 
 export function save(s: State) {
-  try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {}
+  writeLS(KEY, JSON.stringify(s));
 }
 
 export function loadLang(): Lang {
-  try {
-    const l = localStorage.getItem(LK);
-    if (l === "vi" || l === "en") return l;
-  } catch {}
-  return "vi";
+  const l = readLS(LK);
+  return l === "en" ? "en" : "vi";
 }
 
 export function saveLang(l: Lang) {
-  try { localStorage.setItem(LK, l); } catch {}
+  writeLS(LK, l);
 }
 

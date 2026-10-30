@@ -5,6 +5,7 @@ import { Combobox, type Opt } from "@/components/ui";
 import type { Dict } from "@/lib/i18n";
 import { fold } from "@/lib/text";
 import { supabase } from "@/lib/supabase";
+import { readLS, writeLS } from "@/lib/storage";
 
 // Goong is paid per lookup, so lookups are saved on this device and only made when they're likely to help:
 // after the typing pauses, once the text is long enough, and not when an address already used for an order matches.
@@ -15,13 +16,13 @@ const mem = new Map<string, string[]>(readCache());
 let off = "";
 
 function readCache(): [string, string[]][] {
-  try { return JSON.parse(localStorage.getItem(CACHE) || "[]"); } catch { return []; }
+  try { return JSON.parse(readLS(CACHE) || "[]"); } catch { return []; }
 }
 function remember(q: string, items: string[]) {
   mem.delete(q);
   mem.set(q, items);
   while (mem.size > KEEP) mem.delete(mem.keys().next().value!);
-  try { localStorage.setItem(CACHE, JSON.stringify([...mem])); } catch {}
+  writeLS(CACHE, JSON.stringify([...mem]));
 }
 /** GET /api/address with the signed-in user's token */
 async function ask(params: string) {

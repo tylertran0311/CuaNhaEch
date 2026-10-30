@@ -17,9 +17,10 @@ import type { Update } from "./views/types";
 import { T, type Lang } from "@/lib/i18n";
 import { day, load, loadLang, loadLocalRaw, save, saveLang, trashExpired, type State } from "@/lib/store";
 import { supabase } from "@/lib/supabase";
-import { isMember, loadCloud, subscribe, syncDiff } from "@/lib/cloud";
+import { errMsg, isMember, loadCloud, subscribe, syncDiff } from "@/lib/cloud";
+import { readLS, writeLS } from "@/lib/storage";
 
-export type Tab = "orders" | "cal" | "menu" | "money" | "cust";
+type Tab = "orders" | "cal" | "menu" | "money" | "cust";
 const TABS: Tab[] = ["orders", "cal", "menu", "money", "cust"];
 const IMPORTED = "cne-imported";
 
@@ -69,13 +70,11 @@ export default function Dashboard() {
         const data = await loadCloud(sb);
         if (!alive) return;
         put(data);
-        let flag = null;
-        try { flag = localStorage.getItem(IMPORTED); } catch {}
         const old = loadLocalRaw();
-        setLocal(!flag && old && (old.orders.length || old.exp.length) ? old : null);
+        setLocal(!readLS(IMPORTED) && old && (old.orders.length || old.exp.length) ? old : null);
         off = subscribe(sb, (fn) => { if (sRef.current) put(fn(sRef.current)); });
       } catch (e) {
-        if (alive) setLoadErr(e instanceof Error ? e.message : String(e));
+        if (alive) setLoadErr(errMsg(e));
       }
     })();
     return () => { alive = false; off?.(); };
@@ -99,7 +98,7 @@ export default function Dashboard() {
             if (tok) fetch("/api/menu-changed", { method: "POST", headers: { authorization: "Bearer " + tok } }).catch(() => {});
           });
         },
-        (e) => setSyncErr(e instanceof Error ? e.message : String(e?.message ?? e)),
+        (e) => setSyncErr(errMsg(e)),
       );
     } else save(next);
   }, [put]);
@@ -110,7 +109,7 @@ export default function Dashboard() {
   }
 
   function dismissImport() {
-    try { localStorage.setItem(IMPORTED, "1"); } catch {}
+    writeLS(IMPORTED, "1");
     setLocal(null);
   }
 
@@ -119,13 +118,12 @@ export default function Dashboard() {
     const cur = sRef.current;
     if (!supabase || !cur || !local) return;
     setImporting(true);
-    const has = (ids: Set<number>, id: number) => ids.has(id);
     const oIds = new Set(cur.orders.map((o) => o.id)), eIds = new Set(cur.exp.map((x) => x.id));
     const empty = !cur.orders.length && !cur.exp.length;
     const next: State = {
       ...cur,
-      orders: [...cur.orders, ...local.orders.filter((o) => !has(oIds, o.id))],
-      exp: [...cur.exp, ...local.exp.filter((x) => !has(eIds, x.id))],
+      orders: [...cur.orders, ...local.orders.filter((o) => !oIds.has(o.id))],
+      exp: [...cur.exp, ...local.exp.filter((x) => !eIds.has(x.id))],
       // A fresh database only has the default menu, so take this browser's menu and prices too
       menu: empty ? local.menu : cur.menu,
     };
@@ -134,7 +132,7 @@ export default function Dashboard() {
       put(next);
       dismissImport();
     } catch (e) {
-      setSyncErr(e instanceof Error ? e.message : String((e as { message?: string })?.message ?? e));
+      setSyncErr(errMsg(e));
     }
     setImporting(false);
   }

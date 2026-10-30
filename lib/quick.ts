@@ -4,8 +4,8 @@ import { fold } from "./text";
 /** The template sent to customers (always Vietnamese) */
 export const QUICK_TEMPLATE = ["Tên:", "Sđt:", "Địa chỉ:", "Link Google Maps (nếu có):", "Ngày giao:", "Giờ giao:", "Note:"].join("\n");
 
-export type QuickField = "name" | "phone" | "addr" | "map" | "date" | "time" | "note";
-export type QuickRaw = Partial<Record<QuickField, string>>;
+type QuickField = "name" | "phone" | "addr" | "map" | "date" | "time" | "note";
+type QuickRaw = Partial<Record<QuickField, string>>;
 
 // Labels customers may use (compared without accents, case or extra spaces)
 const KEYS: [QuickField, RegExp][] = [

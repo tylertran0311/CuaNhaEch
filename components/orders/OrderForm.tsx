@@ -11,7 +11,8 @@ import { OrderLine } from "./bits";
 import { formatVN, isVNPhone } from "@/lib/phone";
 import { QUICK_TEMPLATE, parseDate, parseTime, splitReply } from "@/lib/quick";
 import { fold, mapLinkIn } from "@/lib/text";
-import { CH, KINDS, day, deposit, dueAfterDeposit, kl, newId, short, steamFeeFor, vnd, type Kind, type Line, type Order, type State, type Unit } from "@/lib/store";
+import { readLS, writeLS } from "@/lib/storage";
+import { CH, byKind, day, deposit, dueAfterDeposit, kl, newId, short, steamFeeFor, vnd, type Kind, type Line, type Order, type State, type Unit } from "@/lib/store";
 
 // When editing, a line starts on its saved snapshot (pid === OLD) so the order keeps the price it was placed at
 interface FormLine { key: number; pid: string; q: string; u: Unit; snap?: { k: Kind; name: string; price: number } }
@@ -20,7 +21,7 @@ const FORM_OPEN = "cne-form-open";
 
 let lineKey = 0;
 const newLine = (s: State): FormLine => {
-  const first = KINDS.flatMap((k) => s.menu.items.filter((i) => i.k === k))[0];
+  const first = byKind(s.menu.items)[0];
   return { key: ++lineKey, pid: first ? first.id : "", q: "", u: "kg" };
 };
 // New orders start on today at the current hour (minutes left at :00)
@@ -59,7 +60,7 @@ export default function OrderForm({ s, t, update, editing, onSaved, onCancel }: 
     : "";
 
   // The form can be folded away to leave more room for the board; remembered on this device. Editing always opens it.
-  const [open, setOpen] = useState(() => { if (e0) return true; try { return localStorage.getItem(FORM_OPEN) !== "0"; } catch { return true; } });
+  const [open, setOpen] = useState(() => !!e0 || readLS(FORM_OPEN) !== "0");
   // While the height animates the content is clipped; once it settles it stops clipping so focus rings and shadows show
   const [settled, setSettled] = useState(open);
   const firstRun = useRef(true);
@@ -71,13 +72,13 @@ export default function OrderForm({ s, t, update, editing, onSaved, onCancel }: 
   }, [open]);
   function showForm(v: boolean) {
     setOpen(v);
-    try { localStorage.setItem(FORM_OPEN, v ? "1" : "0"); } catch {}
+    writeLS(FORM_OPEN, v ? "1" : "0");
   }
   // Scroll to the form when it opens for an edit (only then: the order object changes with every data update)
   const editId = e0?.id;
   useEffect(() => {
     if (editId == null) return;
-    try { localStorage.setItem(FORM_OPEN, "1"); } catch {}
+    writeLS(FORM_OPEN, "1");
     // Wait a frame so the form is laid out before scrolling to it
     const id = setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
     return () => clearTimeout(id);
@@ -101,14 +102,16 @@ export default function OrderForm({ s, t, update, editing, onSaved, onCancel }: 
     else if (a) setLinkAddr(a);
   }
 
-  // Past customers, newest order first, with the phone and address they last used
+  // Orders newest first (ids grow with time), sorted once for the two lists below
+  const newest = useMemo(() => [...s.orders].sort((a, b) => b.id - a.id), [s.orders]);
+  // Past customers with the phone and address they last used
   const custs = useMemo(() => {
     const m = new Map<string, Order>();
-    [...s.orders].sort((a, b) => b.id - a.id).forEach((o) => { const k = fold(o.name.trim()); if (k && !m.has(k)) m.set(k, o); });
+    newest.forEach((o) => { const k = fold(o.name.trim()); if (k && !m.has(k)) m.set(k, o); });
     return m;
-  }, [s.orders]);
+  }, [newest]);
   // Addresses already delivered to, newest first: suggested for free before asking Goong
-  const pastAddrs = useMemo(() => [...new Set([...s.orders].sort((a, b) => b.id - a.id).map((o) => o.addr?.trim() || "").filter(Boolean))], [s.orders]);
+  const pastAddrs = useMemo(() => [...new Set(newest.map((o) => o.addr?.trim() || "").filter(Boolean))], [newest]);
   const custOpts = useMemo(() => [...custs.values()].map((o) => ({ value: o.name, hint: o.phone || t.pastCust })), [custs, t]);
   function pickCustomer(o: { value: string }) {
     const c = custs.get(fold(o.value.trim()));
@@ -163,13 +166,12 @@ export default function OrderForm({ s, t, update, editing, onSaved, onCancel }: 
 
   const item = (id: string) => s.menu.items.find((i) => i.id === id);
   // A line whose item was removed from the menu (here or on another device) falls back to the first item
-  const firstId = KINDS.flatMap((k) => s.menu.items.filter((i) => i.k === k))[0]?.id ?? "";
+  const firstId = byKind(s.menu.items)[0]?.id ?? "";
   const pidOf = (l: FormLine) => (l.pid === OLD && l.snap ? OLD : item(l.pid) ? l.pid : firstId);
   // Dish choices grouped by kind; a line being edited also offers the item at the price it was ordered at
   const dishOpts = (l: FormLine) => [
     ...(l.snap ? [{ value: OLD, label: `${l.snap.name} — ${short(l.snap.price)}/kg`, hint: t.atOrder }] : []),
-    ...KINDS.flatMap((k) => s.menu.items.filter((i) => i.k === k)
-      .map((i) => ({ value: i.id, label: `${i.name} — ${short(i.price)}/kg`, group: kl(t, k) }))),
+    ...byKind(s.menu.items).map((i) => ({ value: i.id, label: `${i.name} — ${short(i.price)}/kg`, group: kl(t, i.k) })),
   ];
   const resolve = (l: FormLine) => {
     if (pidOf(l) === OLD) {
