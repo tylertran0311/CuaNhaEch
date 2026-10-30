@@ -1,13 +1,18 @@
+import { useState } from "react";
 import { Button, Chip, CopyBtn } from "@/components/ui";
 import type { Dict } from "@/lib/i18n";
 import { mapUrl } from "@/lib/text";
 import { DEPOSITED, PAID, deposit, stillDue, vnd, type Order } from "@/lib/store";
+import { bankReady, paidByBank } from "@/lib/pay";
 import { ItemsList, When } from "./bits";
+import PayQR from "./PayQR";
 
 /** One order on the board: contact, delivery, items, money and actions. Dragged by the ⠿ grip (see useBoardDrag). */
 export default function OrderCard({ o, t, pop, editing, onDeposit, onEdit, onDelete }: {
   o: Order; t: Dict; pop?: boolean; editing?: boolean; onDeposit: () => void; onEdit: () => void; onDelete: () => void;
 }) {
+  const [qr, setQr] = useState(false);
+  const bank = paidByBank(o), times = o.pays?.length || 0;
   return (
     <div className={`card${pop ? " pop" : ""}${editing ? " editing" : ""}`} data-id={o.id}>
       <span className="grip" aria-hidden="true">⠿</span>
@@ -32,9 +37,13 @@ export default function OrderCard({ o, t, pop, editing, onDeposit, onEdit, onDel
         ) : o.stage < PAID ? (
           <div className="paid">✓ {t.depGot}{vnd(o.dep || 0)}</div>
         ) : <div className="paid">✓ {t.paidFull}</div>}
+        {o.stage < DEPOSITED && !!o.part && <div className="part">{t.payPart}{vnd(o.part)}</div>}
+        {bank > 0 && o.stage >= DEPOSITED && <div className="bank">💳 {t.payGot}{vnd(bank)}{times > 1 ? t.payTimes.replace("{n}", String(times)) : ""}</div>}
       </div>
+      {qr && <PayQR o={o} t={t} />}
       <div className="row">
         {o.stage < DEPOSITED && <Button className="dp" onClick={onDeposit}>{t.depMark}</Button>}
+        {bankReady && o.stage < PAID && <Button on={qr} aria-expanded={qr} onClick={() => setQr(!qr)}>{qr ? t.payQrHide : t.payQr}</Button>}
         <div className="acts">
           <Button onClick={onEdit}>{t.edit}</Button>
           <Button onClick={onDelete}>{t.rm}</Button>

@@ -16,7 +16,7 @@ import CustomersView from "./views/CustomersView";
 import Login from "./views/Login";
 import type { Update } from "./views/types";
 import { T, type Lang } from "@/lib/i18n";
-import { day, fdw, load, loadLang, loadLocalRaw, save, saveLang, trashExpired, type State } from "@/lib/store";
+import { day, fdw, load, loadLang, loadLocalRaw, save, saveLang, trashExpired, vnd, type State } from "@/lib/store";
 import { supabase } from "@/lib/supabase";
 import { errMsg, isMember, loadCloud, subscribe, syncDiff } from "@/lib/cloud";
 import { readLS, writeLS } from "@/lib/storage";
@@ -162,6 +162,19 @@ export default function Dashboard() {
     if (added.length) setFresh(added[added.length - 1]);
   }, [s?.reqs]);
 
+  // A bank transfer was matched to an order (SePay → database → realtime): say so. Transfers there at load don't count.
+  const paysSeen = useRef<Map<number, number> | null>(null);
+  const [money, setMoney] = useState<{ key: string; name: string; amt: number } | null>(null);
+  useEffect(() => {
+    if (!s) return;
+    const first = !paysSeen.current, m = (paysSeen.current ??= new Map());
+    for (const o of s.orders) {
+      const n = o.pays?.length || 0, was = m.get(o.id) ?? 0;
+      if (!first && n > was) { const p = o.pays![n - 1]; setMoney({ key: o.id + ":" + p.id, name: o.name, amt: p.amt }); }
+      m.set(o.id, n);
+    }
+  }, [s?.orders]);
+
   // Today's crab stock: keep "what is left" in step with the day's confirmed orders, so the public pages show it
   useEffect(() => {
     if (!s?.stock || s.stock.date !== day(0)) return;
@@ -202,6 +215,11 @@ export default function Dashboard() {
               {tab === "money" && <MoneyView s={view} t={t} update={update} />}
               {tab === "cust" && <CustomersView s={view} t={t} update={update} />}
             </div>
+            {money && (
+              <Toast key={money.key} duration={12000} onDone={() => setMoney(null)}>
+                💳 {t.payNew}{vnd(money.amt)} · {money.name}
+              </Toast>
+            )}
             {fresh && (
               <Toast key={fresh.id} duration={12000} action={t.reqSee} onAction={() => { setTab("reqs"); setFresh(null); }} onDone={() => setFresh(null)}>
                 {t.reqNew}{fresh.name} · {fdw(t, fresh.dDate)} {fresh.dTime}

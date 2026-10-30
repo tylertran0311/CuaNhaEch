@@ -2,6 +2,7 @@ import type { Dict, Lang } from "./i18n";
 import { readLS, writeLS } from "./storage";
 import type { Stock } from "./stock";
 import type { Req } from "./request";
+import type { Pay } from "./pay";
 
 export type Kind = "crab" | "shrimp";
 export type Unit = "kg" | "con";
@@ -22,6 +23,9 @@ export interface Order {
   lines?: Line[];
   // Deposit actually received and the day it came in (unset = not received yet)
   dep?: number; depDate?: string;
+  // Bank transfers SePay matched to this order (added by the database, lib/pay.ts), and money received before
+  // the order reached the deposit (less than the 30%; it counts towards it)
+  pays?: Pay[]; part?: number;
   // Legacy free-text fields from older saved data
   crab?: string; shrimp?: string; item?: string;
 }

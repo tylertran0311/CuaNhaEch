@@ -37,7 +37,8 @@ app/styles/
 components/
   ui/            UI kit — no business logic, no data
   layout/        app shell pieces (Header, TabBar, Ticker, Loader)
-  orders/        order-specific parts (OrderForm, OrderCard, Trash, AddressBox, bits, useBoardDrag)
+  orders/        order-specific parts (OrderForm, OrderCard, PayQR, Trash, AddressBox, bits, useBoardDrag)
+                 PayQR = transfer QR on a card (lib/pay.ts); SePay → /api/sepay → sepay_payment() moves the order
   views/         one component per tab (OrdersView, RequestsView, CalendarView, MenuView, MoneyView, CustomersView, Login)
   home/          public pages: HomePage, ProductPage (+ OrderBox, RequestForm, Gallery, StockNote), HomeHeader, HeroSlider, ProductCard, Reviews, Shell, Head, Photo, LineArt
   landing/       Bauhaus page (/bauhaus) + logic shared by both public pages (useCarousel, useStaffEntry)

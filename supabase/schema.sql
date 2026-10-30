@@ -149,6 +149,110 @@ $$;
 revoke all on function public.submit_request(jsonb) from public;
 grant execute on function public.submit_request(jsonb) to anon, authenticated;
 
+-- Secrets only database functions read: RLS is on and there is no policy, so nobody can read this through the API.
+--   sepay_webhook = the API key you typed in SePay's webhook (24+ letters/digits)
+--   sepay_account = (optional) your receiving account number; transfers to other accounts are ignored
+create table if not exists public.app_secrets (
+  key text primary key,
+  value text not null
+);
+alter table public.app_secrets enable row level security;
+revoke all on public.app_secrets from anon, authenticated;
+
+-- Bank transfers reported by SePay (POST /api/sepay → sepay_payment below). Each SePay transaction id is stored once,
+-- so SePay's retries can't count the same money twice. Members can read them; only sepay_payment() writes.
+create table if not exists public.payments (
+  id bigint primary key,
+  order_id bigint,
+  amount bigint not null,
+  data jsonb not null,
+  created_at timestamptz not null default now()
+);
+alter table public.payments enable row level security;
+
+drop policy if exists "members read" on public.payments;
+create policy "members read" on public.payments
+  for select to authenticated using (public.is_member());
+
+-- One incoming transfer. `k` is the key SePay sent; it must match app_secrets.sepay_webhook. The order is found from
+-- "CNE<order id>" in the transfer note (or SePay's payment code). Money counts towards the order: once it reaches the
+-- 30% deposit the order moves to "Đã chuyển cọc" (2), once it covers everything (goods + steaming + shipping) to
+-- "Đã thanh toán" (3). Less than the deposit is kept in `part` until the rest arrives. Returns what happened.
+create or replace function public.sepay_payment(p jsonb, k text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_key text := (select value from public.app_secrets where key = 'sepay_webhook');
+  v_acc text := (select value from public.app_secrets where key = 'sepay_account');
+  v_today text := to_char(now() at time zone 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD');
+  v_id bigint;
+  v_amt bigint;
+  v_note text;
+  v_m text[];
+  v_oid bigint;
+  v_o jsonb;
+  v_stage int;
+  v_goods numeric;
+  v_total numeric;
+  v_dep numeric;
+  v_got numeric;
+begin
+  if v_key is null or char_length(v_key) < 24 or k is null or k <> v_key then raise exception 'unauthorized'; end if;
+  if jsonb_typeof(p) <> 'object' or jsonb_typeof(p->'id') <> 'number' or jsonb_typeof(p->'transferAmount') <> 'number' then
+    raise exception 'invalid payment';
+  end if;
+  begin
+    v_id := (p->>'id')::bigint;
+    v_amt := (p->>'transferAmount')::bigint;
+  exception when others then raise exception 'invalid payment'; end;
+  if v_id <= 0 or v_amt <= 0 or v_amt > 10000000000 then raise exception 'invalid payment'; end if;
+  if coalesce(p->>'transferType', '') <> 'in' then return 'ignored'; end if;
+  if v_acc is not null and coalesce(p->>'accountNumber', '') <> v_acc then return 'ignored'; end if;
+
+  v_note := left(coalesce(p->>'code', '') || ' ' || coalesce(p->>'content', ''), 600);
+  insert into public.payments (id, amount, data) values (v_id, v_amt, jsonb_build_object(
+    'content', left(coalesce(p->>'content', ''), 500), 'code', left(p->>'code', 50), 'gateway', left(p->>'gateway', 50),
+    'date', left(p->>'transactionDate', 30), 'ref', left(p->>'referenceCode', 60), 'acc', left(p->>'accountNumber', 30)))
+  on conflict (id) do nothing;
+  if not found then return 'duplicate'; end if;
+
+  v_m := regexp_match(upper(v_note), 'CNE\s*([0-9]{10,18})');
+  if v_m is null then return 'unmatched'; end if;
+  v_oid := v_m[1]::bigint;
+  select data into v_o from public.orders where id = v_oid for update;
+  if v_o is null or jsonb_typeof(v_o->'delAt') = 'number' then return 'unmatched'; end if;
+  update public.payments set order_id = v_oid where id = v_id;
+
+  v_stage := coalesce((v_o->>'stage')::int, 0);
+  v_goods := coalesce((v_o->>'amt')::numeric, 0);
+  v_total := v_goods + coalesce((v_o->>'steamFee')::numeric, 0) + coalesce((v_o->>'ship')::numeric, 0);
+  v_dep := round(v_goods * 0.3 / 1000) * 1000;
+  v_o := jsonb_set(v_o, '{pays}', coalesce(v_o->'pays', '[]'::jsonb)
+    || jsonb_build_array(jsonb_build_object('id', v_id, 'amt', v_amt, 'at', now())));
+
+  if v_stage < 2 then
+    v_got := coalesce((v_o->>'part')::numeric, 0) + v_amt;
+    if v_got >= v_dep then
+      v_o := (v_o - 'part') || jsonb_build_object('dep', v_got, 'depDate', v_today,
+        'stage', case when v_got >= v_total then 3 else 2 end);
+    else
+      v_o := v_o || jsonb_build_object('part', v_got);
+    end if;
+  elsif v_stage = 2 then
+    v_got := coalesce((v_o->>'dep')::numeric, 0) + v_amt;
+    v_o := v_o || jsonb_build_object('dep', v_got, 'stage', case when v_got >= v_total then 3 else 2 end);
+  end if;
+
+  update public.orders set data = v_o, updated_at = now() where id = v_oid;
+  return 'matched';
+end;
+$$;
+revoke all on function public.sepay_payment(jsonb, text) from public;
+grant execute on function public.sepay_payment(jsonb, text) to anon, authenticated;
+
 -- Live updates: send changes to everyone who has the app open
 do $$
 declare t text;

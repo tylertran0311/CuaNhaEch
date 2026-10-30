@@ -81,6 +81,14 @@
 .dep strong{color:var(--red)}
 .dep .paid{margin-top:4px;color:var(--grn);font-weight:700}
 .dep .nodep{margin-top:4px;color:var(--red);font-weight:700}
+.dep .part{margin-top:4px;color:var(--ink);font-weight:700}
+.dep .bank{margin-top:4px;color:var(--grn);font-weight:700}
+/* Transfer QR inside an order card (PayQR) */
+.pq{display:grid;justify-items:center;gap:8px;margin-top:8px;padding:10px;background:var(--wh);border:var(--bd-dash-thin);border-radius:var(--r-sm)}
+.pq-img{width:100%;max-width:240px;height:auto;aspect-ratio:1;border-radius:var(--r-xs);background:var(--white)}
+.pq-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;font-size:14px;overflow-wrap:anywhere}
+.pq-row span{color:var(--mut);font-weight:700}
+.pq-hint{margin:0;font-size:13px;color:var(--mut);text-align:center}
 /* Actions row */
 .card .row{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;margin-top:8px}
 .card .acts{display:flex;gap:4px;margin-left:auto}

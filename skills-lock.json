@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "payment-integration": {
+      "source": "mrgoonie/claudekit-skills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/payment-integration/SKILL.md",
+      "computedHash": "532b0c1eda4e0ee80863f073b7cab05d432c463bd630d57e36c28c7c38a2bb04"
+    }
+  }
+}
