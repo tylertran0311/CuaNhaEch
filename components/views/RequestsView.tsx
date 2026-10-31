@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Empty, Note, Panel, Toast, useConfirm } from "@/components/ui";
+import { Button, Chip, Empty, Note, Panel, Toast, useConfirm } from "@/components/ui";
 import type { ViewProps } from "./types";
-import { day, fdw, newId, vnd, type Order } from "@/lib/store";
+import { day, fdw, newId, steamFeeFor, vnd, type Order } from "@/lib/store";
 import { formatVN } from "@/lib/phone";
 import { readMapsUrl } from "@/lib/maps";
-import { MAPS_LINK, type Req } from "@/lib/request";
+import { MAPS_LINK, reqItems, type Req } from "@/lib/request";
 
 /** Waiting tab: order requests customers sent from a product page; confirm one to turn it into a Confirmed order */
 export default function RequestsView({ s, t, update, db }: ViewProps & { db: boolean }) {
@@ -14,20 +14,22 @@ export default function RequestsView({ s, t, update, db }: ViewProps & { db: boo
   const [done, setDone] = useState<{ id: number; text: string } | null>(null);
   const reqs = s.reqs ?? [];
 
+  // Each requested dish with today's menu entry (none when it left the menu since)
+  const dishes = (r: Req) => reqItems(r).map((x) => ({ ...x, it: s.menu.items.find((i) => i.name === x.item) }));
+
   function confirm(r: Req) {
-    const it = s.menu.items.find((i) => i.name === r.item);
-    const q = r.q ?? 0;
+    const ds = dishes(r), lines = ds.flatMap(({ it, q }) => (it && q ? [{ k: it.k, name: it.name, q, u: "kg" as const, price: it.price }] : []));
     const o: Order = {
       id: newId(), name: r.name, ch: "Website", phone: formatVN(r.phone), map: r.map,
       addr: readMapsUrl(r.map).text || undefined, dDate: r.dDate, dTime: r.dTime, note: r.note || undefined,
-      lines: it && q ? [{ k: it.k, name: it.name, q, u: "kg", price: it.price }] : [],
-      amt: it && q ? Math.round(it.price * q) : 0, ship: 0, stage: 1, date: day(0),
+      steam: !!r.steam, live: false, steamFee: steamFeeFor(!!r.steam, false),
+      lines, amt: lines.reduce((n, l) => n + Math.round(l.price * l.q), 0), ship: 0, stage: 1, date: day(0),
     };
     update((d) => {
       d.reqs = (d.reqs ?? []).filter((x) => x.id !== r.id);
       d.orders.push(o);
     });
-    setDone({ id: r.id, text: t.reqDone.replace("{n}", r.name) + (it ? "" : " " + t.reqGone) });
+    setDone({ id: r.id, text: t.reqDone.replace("{n}", r.name) + (ds.every((d) => d.it) ? "" : " " + t.reqGone) });
   }
 
   async function decline(r: Req) {
@@ -43,7 +45,7 @@ export default function RequestsView({ s, t, update, db }: ViewProps & { db: boo
         {reqs.length > 0 && (
           <ul className="rq-list">
             {reqs.map((r) => {
-              const it = s.menu.items.find((i) => i.name === r.item);
+              const ds = dishes(r);
               return (
                 <li key={r.id} className="rq-card">
                   <div className="rq-head">
@@ -51,7 +53,12 @@ export default function RequestsView({ s, t, update, db }: ViewProps & { db: boo
                     <a href={`tel:${r.phone}`}>{formatVN(r.phone)}</a>
                   </div>
                   <p className="rq-line"><b>{t.reqDeliver}{fdw(t, r.dDate)} · {r.dTime}</b></p>
-                  {r.item && <p className="rq-line">{r.item} · {String(r.q ?? 0).replace(".", ",")} kg{it && r.q ? ` ≈ ${vnd(it.price * r.q)}` : ""}</p>}
+                  {ds.map(({ item, q, it }) => (
+                    <p key={item} className="rq-line">{item} · {String(q).replace(".", ",")} kg{it && q ? ` ≈ ${vnd(it.price * q)}` : ""}</p>
+                  ))}
+                  <p className="rq-line">
+                    {r.steam ? <Chip kind="steam">🔥 {t.steam} +{vnd(steamFeeFor(true, false))}</Chip> : <Chip kind="raw">🦀 {t.raw}</Chip>}
+                  </p>
                   {r.note && <p className="rq-line rq-note">{r.note}</p>}
                   <p className="rq-line sub tight">
                     {/* Only Google Maps links are stored; checked again so nothing else ever becomes a link */}

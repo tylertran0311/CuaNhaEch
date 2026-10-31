@@ -6,13 +6,20 @@ import { isVNPhone } from "./phone";
 /** A request as stored and shown in the dashboard's waiting list */
 export interface Req {
   id: number; name: string; phone: string; dDate: string; dTime: string; map: string;
-  note?: string; item?: string; q?: number; at?: string;
+  note?: string; items?: ReqItem[]; steam?: boolean; at?: string;
+  /** Requests sent before the cart held one dish here instead of `items` */
+  item?: string; q?: number;
 }
-/** What the form sends */
-export interface ReqInput { name: string; phone: string; dDate: string; dTime: string; map: string; note: string; item: string; q: number }
+/** One dish and its kilos */
+export interface ReqItem { item: string; q: number }
+/** What the form sends; `steam` = steamed before delivery instead of raw */
+export interface ReqInput { name: string; phone: string; dDate: string; dTime: string; map: string; note: string; items: ReqItem[]; steam: boolean }
 export type ReqField = keyof ReqInput;
 
-export const REQ_LIMITS = { name: 50, note: 300, map: 500, item: 60, days: 30, qMin: 0.5, qMax: 20 };
+export const REQ_LIMITS = { name: 50, note: 300, map: 500, item: 60, lines: 10, days: 30, qMin: 0.5, qMax: 20 };
+
+/** A request's dishes, old one-dish requests included */
+export const reqItems = (r: Req): ReqItem[] => r.items ?? (r.item ? [{ item: r.item, q: r.q ?? 0 }] : []);
 
 // Letters (any language, with Vietnamese marks), spaces and . ' - only; starts with a letter
 const NAME = /^\p{L}[\p{L}\p{M} .'-]*$/u;
@@ -46,7 +53,11 @@ export function checkRequest(raw: unknown, today: string, now: string):
   const data: ReqInput = {
     name: clean(r.name, L.name), phone: phoneDigits(clean(r.phone, 20)), dDate: clean(r.dDate, 10), dTime: clean(r.dTime, 5),
     map: clean(r.map, L.map), note: typeof r.note === "string" ? r.note.replace(CTRL, "").trim().slice(0, L.note + 1) : "",
-    item: clean(r.item, L.item), q: typeof r.q === "number" ? r.q : Number.NaN,
+    items: (Array.isArray(r.items) ? r.items : []).slice(0, L.lines + 1).map((x) => {
+      const i = (x && typeof x === "object" ? x : {}) as Record<string, unknown>;
+      return { item: clean(i.item, L.item), q: typeof i.q === "number" ? i.q : Number.NaN };
+    }),
+    steam: r.steam === true,
   };
 
   if (data.name.length < 2) errors.name = "Nhập họ tên (ít nhất 2 chữ).";
@@ -67,8 +78,9 @@ export function checkRequest(raw: unknown, today: string, now: string):
 
   if (data.note.length > L.note) errors.note = `Ghi chú tối đa ${L.note} ký tự.`;
 
-  if (!data.item || data.item.length > L.item) errors.item = "Chọn món.";
-  if (!(data.q >= L.qMin && data.q <= L.qMax && Number.isInteger(data.q * 2))) errors.q = `Số lượng từ 0,5 đến ${L.qMax} kg, bước 0,5 kg.`;
+  if (!data.items.length || data.items.length > L.lines || new Set(data.items.map((i) => i.item)).size < data.items.length
+    || data.items.some((i) => !i.item || i.item.length > L.item)) errors.items = `Chọn từ 1 đến ${L.lines} món khác nhau.`;
+  else if (data.items.some((i) => !(i.q >= L.qMin && i.q <= L.qMax && Number.isInteger(i.q * 2)))) errors.items = `Mỗi món từ 0,5 đến ${L.qMax} kg, bước 0,5 kg.`;
 
   return Object.keys(errors).length ? { ok: false, errors } : { ok: true, data };
 }

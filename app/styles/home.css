@@ -43,7 +43,7 @@
 .hm-logo{height:38px;width:auto;flex:none}
 .hm-word{font:500 var(--mn-text-xl) var(--font-serif),serif}
 .hm-nav{display:none}
-.hm-burger{width:44px;height:44px;display:grid;place-content:center;gap:7px;border:1px solid var(--mn-line-strong);border-radius:50%;background:transparent;cursor:pointer;padding:0}
+.hm-burger{flex:none;width:44px;height:44px;display:grid;place-content:center;gap:7px;border:1px solid var(--mn-line-strong);border-radius:50%;background:transparent;cursor:pointer;padding:0}
 .hm-burger i{display:block;width:16px;height:1.5px;background:var(--mn-ink);transition:transform var(--mn-dur) var(--mn-ease)}
 .hm-burger[aria-expanded="true"] i:first-child{transform:translateY(4.25px) rotate(45deg)}
 .hm-burger[aria-expanded="true"] i:last-child{transform:translateY(-4.25px) rotate(-45deg)}
@@ -52,6 +52,8 @@
 .hm-nav a:first-child{border-top:0}
 .hm-nav .hm-staff{color:var(--mn-red)}
 @keyframes hm-drop{from{opacity:0;transform:translateY(-6px)}}
+/* Phones: logo, cart and menu only; ordering is in the call / Zalo bar at the bottom */
+@media(max-width:479px){.hm-head .hm-btn-sm{display:none}}
 @media(max-width:400px){.hm-word{font-size:var(--mn-text-lg)}.hm-logo{height:32px}.hm-head-in{gap:var(--mn-s-2)}.hm-btn-sm{padding:0 var(--mn-s-4)}}
 
 /* ---------- Hero: the crabs, full width ---------- */
@@ -368,11 +370,62 @@ html:has(.hm),html:has(.lp){scrollbar-color:var(--mn-mut) transparent}
 .hm-ob-note{margin:calc(var(--mn-s-1) * -1) 0 0;text-align:center;font-size:var(--mn-text-sm);color:var(--mn-mut)}
 .hm-ob-note b{font-weight:500;color:var(--mn-ink)}
 /* "Đặt giao ngày khác" form (RequestForm.tsx): labels above fields, error under the field it belongs to */
-.hm-ob-later{width:100%}
+.hm-ob-later,.hm-ob-cart{width:100%}
+.hm-ob-cart{gap:var(--mn-s-2)}
+.hm-ob-added{margin:calc(var(--mn-s-2) * -1) 0 0;text-align:center;font-size:var(--mn-text-md);color:var(--mn-sea)}
+.hm-ob-added .hm-link{font-size:inherit;background:none;border-width:0 0 1px;padding:0;cursor:pointer;color:var(--mn-ink)}
+
+/* Cart (CartButton.tsx): bag in the header with a count, opening a sheet from the right (full width on phones) */
+.hm-cart-ic{width:22px;height:22px;flex:none}
+.hm-cart-btn{position:relative;width:44px;height:44px;display:grid;place-items:center;flex:none;padding:0;border:1px solid var(--mn-line-strong);border-radius:50%;background:transparent;color:var(--mn-ink);cursor:pointer;transition:border-color var(--mn-dur) var(--mn-ease)}
+.hm-cart-btn:hover{border-color:var(--mn-ink)}
+.hm-cart-n{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 var(--mn-s-1);display:grid;place-items:center;border-radius:var(--mn-r-pill);background:var(--mn-red);color:var(--mn-bg);font-size:var(--mn-text-2xs);font-weight:600;font-variant-numeric:tabular-nums}
+.hm-cart{margin:0 0 0 auto;width:min(420px,100%);max-width:100%;height:100dvh;max-height:100dvh;padding:0;border:0;background:var(--mn-bg);color:var(--mn-ink);box-shadow:var(--mn-shadow-lg)}
+.hm-cart[open]{animation:hm-slide var(--mn-dur) var(--mn-ease)}
+.hm-cart::backdrop{background:var(--mn-scrim)}
+html:has(.hm-cart[open]){overflow:hidden}
+@keyframes hm-slide{from{transform:translateX(24px);opacity:0}}
+@media(prefers-reduced-motion:reduce){.hm-cart[open]{animation:none}}
+.hm-cart-in{display:flex;flex-direction:column;height:100%}
+.hm-cart-head{display:flex;align-items:center;justify-content:space-between;gap:var(--mn-s-3);padding:var(--mn-s-3) var(--mn-s-4) var(--mn-s-3) var(--mn-s-5);border-bottom:1px solid var(--mn-line)}
+.hm-cart-head h2{margin:0;font:500 var(--mn-text-xl) var(--font-serif),serif}
+.hm-cart-head h2 span{font:400 var(--mn-text-md) var(--font-viet),sans-serif;color:var(--mn-mut)}
+.hm-cart-x{width:44px;height:44px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:transparent;color:var(--mn-ink);cursor:pointer}
+.hm-cart-x:hover{background:var(--mn-red-wash)}
+.hm-cart-x svg{width:22px;height:22px}
+.hm-cart-body{flex:1;overflow-y:auto;overscroll-behavior:contain;margin:0;padding:var(--mn-s-4) var(--mn-s-5)}
+.hm-cart-list{list-style:none;display:grid;align-content:start;gap:0}
+.hm-cart-line{display:grid;gap:var(--mn-s-3);padding:var(--mn-s-4) 0;border-top:1px solid var(--mn-line)}
+.hm-cart-line:first-child{border-top:0;padding-top:0}
+.hm-cart-name{display:grid;gap:var(--mn-s-1)}
+.hm-cart-name a{font-weight:600;text-decoration:none}
+.hm-cart-name a:hover{color:var(--mn-red)}
+.hm-cart-name span{font-size:var(--mn-text-sm);color:var(--mn-mut)}
+.hm-cart-row{display:flex;align-items:center;justify-content:space-between;gap:var(--mn-s-3)}
+.hm-cart-sum{font-weight:600;font-variant-numeric:tabular-nums}
+.hm-cart-rm,.hm-cart-back{justify-self:start;min-height:32px;align-items:center;background:none;border-width:0 0 1px;padding:0;font-size:var(--mn-text-sm);color:var(--mn-mut);cursor:pointer}
+.hm-cart-back{margin-bottom:var(--mn-s-2)}
+.hm-cart-foot{display:grid;gap:var(--mn-s-3);padding:var(--mn-s-4) var(--mn-s-5) calc(var(--mn-s-4) + env(safe-area-inset-bottom,0px));border-top:1px solid var(--mn-line);background:var(--mn-card)}
+.hm-cart-foot .hm-ob-sum{padding-top:0;border-top:0}
+.hm-cart-foot .hm-btn{width:100%}
+.hm-cart-empty{display:grid;align-content:start;justify-items:start;gap:var(--mn-s-4)}
+.hm-cart-empty p{margin:0;color:var(--mn-mut)}
+.hm-rq-what{list-style:none;padding:0;display:grid;gap:var(--mn-s-1)}
 .hm-rq{display:grid;gap:var(--mn-s-4);padding-top:var(--mn-s-4);border-top:1px solid var(--mn-line)}
 .hm-rq-what{margin:0;font-size:var(--mn-text-md);color:var(--mn-mut)}
 .hm-rq-what b{font-weight:600;color:var(--mn-ink)}
 .hm-rq-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--mn-s-3)}
+/* Raw or steamed: two tappable cards, the radio inside each */
+.hm-opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--mn-s-3);margin:0;padding:0;border:0;min-width:0}
+.hm-opts legend{padding:0;margin-bottom:var(--mn-s-1);font-size:var(--mn-text-sm);font-weight:500;color:var(--mn-ink)}
+.hm-opt{display:flex;gap:var(--mn-s-2);align-items:flex-start;min-height:48px;padding:var(--mn-s-3);border:1px solid var(--mn-line-strong);border-radius:var(--mn-r-md);background:var(--mn-bg);cursor:pointer;transition:border-color var(--mn-dur) var(--mn-ease),background-color var(--mn-dur) var(--mn-ease)}
+.hm-opt:hover{border-color:var(--mn-mut)}
+.hm-opt:has(input:checked){border-color:var(--mn-red);box-shadow:inset 0 0 0 1px var(--mn-red);background:var(--mn-red-wash)}
+.hm-opt:has(input:focus-visible){outline:var(--mn-focus-w) solid var(--mn-focus);outline-offset:var(--mn-focus-gap)}
+.hm-opt input:focus-visible{outline:0}
+.hm-opt input{flex:none;width:18px;height:18px;margin:2px 0 0;accent-color:var(--mn-red)}
+.hm-opt span{display:grid;gap:2px;min-width:0;font-size:var(--mn-text-sm);color:var(--mn-mut);line-height:var(--mn-lh-snug)}
+.hm-opt b{font-size:var(--mn-text-body);font-weight:600;color:var(--mn-ink)}
 .hm-field{display:grid;gap:var(--mn-s-1);min-width:0}
 .hm-field label{font-size:var(--mn-text-sm);font-weight:500;color:var(--mn-ink)}
 .hm-field :is(input,textarea){width:100%;min-height:48px;padding:var(--mn-s-3);border:1px solid var(--mn-line-strong);border-radius:var(--mn-r-md);background:var(--mn-bg);color:var(--mn-ink);font:inherit;font-size:var(--mn-text-body);transition:border-color var(--mn-dur) var(--mn-ease)}

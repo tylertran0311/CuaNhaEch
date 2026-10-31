@@ -97,6 +97,7 @@
   --mn-bg2:#f2ece3;
   --mn-card:#fffdf9;
   --mn-glass:rgba(250,247,242,.92);   /* sticky header, dock, floating buttons */
+  --mn-scrim:rgba(31,28,24,.45);      /* dims the page behind the cart sheet */
   /* Colors — text and lines */
   --mn-ink:#1f1c18;
   --mn-mut:#6b635a;      /* 5.0:1 on --mn-bg2, 5.6:1 on --mn-bg */

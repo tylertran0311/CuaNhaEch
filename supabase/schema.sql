@@ -118,7 +118,10 @@ declare
   v_time text := coalesce(p->>'dTime', '');
   v_map text := coalesce(p->>'map', '');
   v_note text := coalesce(p->>'note', '');
-  v_item text := coalesce(p->>'item', '');
+  v_steam boolean := coalesce(p->'steam' = 'true'::jsonb, false);
+  v_items jsonb := '[]'::jsonb;
+  v_it jsonb;
+  v_item text;
   v_date date;
   v_q numeric;
   v_id bigint;
@@ -131,9 +134,16 @@ begin
   if v_time !~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' or (v_date = v_today and v_time <= v_now) then raise exception 'invalid time'; end if;
   if char_length(v_map) > 500 or v_map !~* '^https://((maps\.app\.goo\.gl|goo\.gl/maps|maps\.google\.[a-z.]+)/|(www\.)?google\.[a-z.]+/maps)' then raise exception 'invalid map'; end if;
   if char_length(v_note) > 300 or v_note ~ '[\x01-\x09\x0b-\x1f\x7f]' then raise exception 'invalid note'; end if;
-  if not exists (select 1 from public.menu_items where data->>'name' = v_item) then raise exception 'invalid item'; end if;
-  begin v_q := (p->>'q')::numeric; exception when others then raise exception 'invalid quantity'; end;
-  if v_q is null or v_q < 0.5 or v_q > 20 or v_q * 2 <> floor(v_q * 2) then raise exception 'invalid quantity'; end if;
+  -- 1 to 10 different dishes from the menu, each 0.5–20 kg in half kilos (rebuilt so nothing else is stored)
+  if jsonb_typeof(p->'items') is distinct from 'array' or jsonb_array_length(p->'items') not between 1 and 10 then raise exception 'invalid items'; end if;
+  for v_it in select value from jsonb_array_elements(p->'items') loop
+    v_item := coalesce(v_it->>'item', '');
+    if not exists (select 1 from public.menu_items where data->>'name' = v_item) then raise exception 'invalid item'; end if;
+    if v_items @> jsonb_build_array(jsonb_build_object('item', v_item)) then raise exception 'invalid items'; end if;
+    begin v_q := (v_it->>'q')::numeric; exception when others then raise exception 'invalid quantity'; end;
+    if v_q is null or v_q < 0.5 or v_q > 20 or v_q * 2 <> floor(v_q * 2) then raise exception 'invalid quantity'; end if;
+    v_items := v_items || jsonb_build_array(jsonb_build_object('item', v_item, 'q', v_q));
+  end loop;
   -- Against spam: at most 3 requests per phone a day, 60 in all an hour
   if (select count(*) from public.requests where data->>'phone' = v_phone and created_at > now() - interval '1 day') >= 3
     or (select count(*) from public.requests where created_at > now() - interval '1 hour') >= 60 then
@@ -142,7 +152,7 @@ begin
   v_id := floor(extract(epoch from clock_timestamp()) * 1000)::bigint * 1000 + floor(random() * 1000)::bigint;
   insert into public.requests (id, data) values (v_id, jsonb_build_object(
     'name', v_name, 'phone', v_phone, 'dDate', v_date::text, 'dTime', v_time, 'map', v_map,
-    'note', v_note, 'item', v_item, 'q', v_q, 'at', now()));
+    'note', v_note, 'items', v_items, 'steam', v_steam, 'at', now()));
   return v_id;
 end;
 $$;

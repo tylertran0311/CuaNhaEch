@@ -58,7 +58,7 @@ export default function ProductPage({ product: p, products }: { product: Product
                   <ul>{p.info.cook.map((c) => <li key={c}>{c}</li>)}</ul>
                 </div>
 
-                <OrderBox name={p.name} item={p.item} size={p.size} price={p.price} />
+                <OrderBox name={p.name} item={p.item} slug={p.slug} size={p.size} price={p.price} />
 
                 <ul className="hm-pd-points">{POINTS.map((t) => <li key={t}>{t}</li>)}</ul>
               </div>

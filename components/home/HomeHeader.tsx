@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import logo from "@/public/logo.png";
 import { useStaffEntry } from "@/components/landing/useStaffEntry";
+import CartButton from "./CartButton";
 
 const NAV = [["#bang-gia", "Bảng giá"], ["#danh-gia", "Feedback"], ["#dat-hang", "Cách đặt"], ["#hoi-dap", "Hỏi đáp"], ["#chon-cua", "Chọn cua"], ["#lien-he", "Liên hệ"]] as const;
 
@@ -32,6 +33,7 @@ export default function HomeHeader({ base = "" }: { base?: string }) {
           {NAV.map(([href, label]) => <a key={href} href={base + href} onClick={() => setMenu(false)}>{label}</a>)}
           {staff && <a className="hm-staff" href="/admin">Quản lý ↗</a>}
         </nav>
+        <CartButton />
         <a className="hm-btn hm-btn-sm" href={base + "#lien-he"}>Đặt hàng</a>
         <button type="button" className="hm-burger" aria-label="Mở mục lục" aria-expanded={menu} onClick={() => setMenu(!menu)}>
           <i /><i />

@@ -52,7 +52,8 @@ export async function POST(req: Request) {
   if (!r.ok) return fail(400, "Bạn kiểm tra lại các ô được đánh dấu nhé.", r.errors);
 
   const menu = await getPublicMenu();
-  if (!menu?.items.some((i) => i.name === r.data.item)) return fail(400, "Món này hiện không có trong menu.", { item: "Chọn món khác." });
+  const gone = r.data.items.find((x) => !menu?.items.some((i) => i.name === x.item));
+  if (gone) return fail(400, `${gone.item} hiện không có trong menu.`, { items: "Bỏ món này khỏi giỏ rồi gửi lại." });
 
   try {
     const res = await fetch(`${SB_URL}/rest/v1/rpc/submit_request`, {

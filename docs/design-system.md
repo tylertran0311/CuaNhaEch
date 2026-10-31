@@ -40,7 +40,7 @@ components/
   orders/        order-specific parts (OrderForm, OrderCard, PayQR, Trash, AddressBox, bits, useBoardDrag)
                  PayQR = transfer QR on a card (lib/pay.ts); SePay → /api/sepay → sepay_payment() moves the order
   views/         one component per tab (OrdersView, RequestsView, CalendarView, MenuView, MoneyView, CustomersView, Login)
-  home/          public pages: HomePage, ProductPage (+ OrderBox, RequestForm, Gallery, StockNote), HomeHeader, HeroSlider, ProductCard, Reviews, Shell, Head, Photo, LineArt
+  home/          public pages: HomePage, ProductPage (+ OrderBox, RequestForm, Gallery, StockNote), HomeHeader (+ CartButton), HeroSlider, ProductCard, Reviews, Shell, Head, Photo, LineArt
   landing/       Bauhaus page (/bauhaus) + logic shared by both public pages (useCarousel, useStaffEntry)
 lib/landing.ts   public page texts, slides, product extras, contact links, menuProducts() — edit content here
   Dashboard.tsx  loads the data, holds the tab state, renders the shell and the current view
@@ -134,7 +134,10 @@ circles-squares-triangles, bold uppercase type in **Unbounded** (`--font-display
   Menu tab; orders delivered that day (or placed that day, without a delivery day) from "Đã xác nhận" on come off (kg from kg, "con" from pieces, `lib/stock.ts`).
   Cards and product pages show "Sẵn sàng giao · còn …" (green check) or "Đã hết hôm nay" (hollow circle), nothing
   when today's stock isn't entered. Needs the meta `stock` read policy from `supabase/schema.sql`.
-- Order requests: "Đặt giao ngày khác" in `<OrderBox>` opens `<RequestForm>` (name, phone, delivery day today–30 days
+- Cart: "Thêm vào giỏ" in `<OrderBox>` stores the crab in this browser (`lib/cart.ts`, localStorage, up to 10 kinds);
+  the header's `<CartButton>` opens a side sheet (`<dialog>`) to change kilos, then order everything by Zalo or
+  through `<RequestForm>` with all lines. On phones the header's "Đặt hàng" button hides (the bottom bar has it).
+- Order requests: "Đặt giao ngày khác" in `<OrderBox>` opens `<RequestForm>` (one or more dishes in `items`, raw or steamed, name, phone, delivery day today–30 days
   ahead and time, Google Maps link, note; labels above fields, errors under each). It posts to `/api/requests`;
   the same checks (`lib/request.ts`) run in the browser, the route (same-site, size, honeypot, timing, rate limit)
   and the database (`submit_request()`). Requests wait in the dashboard's "Chờ duyệt" tab (number badge, toast when
